@@ -354,6 +354,11 @@ function Weapon:OnUpdate(deltaTime)
         end
         
     end
+    
+    // Handle dropping on the client
+    if Client then
+        self:UpdateDropped()
+    end
 
 end
 
