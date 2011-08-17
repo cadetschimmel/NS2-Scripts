@@ -7,6 +7,9 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 
+
+
+
 /**
  * Morph into new class or buy upgrade.
  */
@@ -156,6 +159,14 @@ end
 function Alien:UpdateNumHives()
 
     local time = Shared.GetTime()
+    
+     // Check for "alltech" cheat
+    if(GetGamerules():GetAllTech()) then
+        self.twoHives = true
+        self.threeHives = true
+        return 0
+    end
+    
     if self.timeOfLastNumHivesUpdate == nil or (time > self.timeOfLastNumHivesUpdate + .5) then
     
         local team = self:GetTeam()

@@ -9,8 +9,9 @@
 Script.Load("lua/Player.lua")
 Script.Load("lua/Mixins/GroundMoveMixin.lua")
 Script.Load("lua/Mixins/CameraHolderMixin.lua")
+Script.Load("lua/FetchMixin.lua")
 Script.Load("lua/OrderSelfMixin.lua")
-Script.Load("lua/DisorientableMixin.lua")
+Script.Load("lua/Jetpack.lua")
 
 class 'Marine' (Player)
 
@@ -41,16 +42,20 @@ Marine.kSquadSpawnEffect = PrecacheAsset("cinematics/marine/squad_spawn")
 
 Marine.kJetpackEffect = PrecacheAsset("cinematics/marine/jetpack/jet.cinematic")
 Marine.kJetpackTrailEffect = PrecacheAsset("cinematics/marine/jetpack/trail.cinematic")
+Marine.kJetpackNode = "JetPack"
 
 // Jetpack
 Marine.kJetpackStart = PrecacheAsset("sound/ns2.fev/marine/common/jetpack_start")
 Marine.kJetpackLoop = PrecacheAsset("sound/ns2.fev/marine/common/jetpack_on")
 Marine.kJetpackEnd = PrecacheAsset("sound/ns2.fev/marine/common/jetpack_end")
 
+Marine.kGetSupply = PrecacheAsset("cinematics/marine/spawn_item.cinematic")
+
 Marine.kEffectNode = "fxnode_playereffect"
 Marine.kHealth = kMarineHealth
 Marine.kBaseArmor = kMarineArmor
 Marine.kArmorPerUpgradeLevel = kArmorPerUpgradeLevel
+Marine.kJetpackArmorBonus = kJetpackArmorValue
 Marine.kMaxSprintFov = 95
 Marine.kWeaponLiftDelay = .2
 // Player phase delay - players can only teleport this often
@@ -69,7 +74,7 @@ Marine.kRunMaxSpeed = 6.0               // 10 miles an hour = 16,093 meters/hour
 Marine.kRunInfestationMaxSpeed = 5.2    // 10 miles an hour = 16,093 meters/hour = 4.4 meters/second (increase for FPS tastes)
 
 // Allow JPers to go faster in the air, but still capped
-Marine.kAirSpeedMultiplier = 3
+Marine.kAirSpeedMultiplier = 2
 
 // Marine weight scalars (from NS1)
 Marine.kStowedWeaponWeightScalar = .7
@@ -77,6 +82,17 @@ Marine.kStowedWeaponWeightScalar = .7
 // How fast does our armor get repaired by marines
 Marine.kArmorWeldRate = 12
 Marine.kWeldedEffectsInterval = .5
+
+Marine.kJetpackGravity = -12
+
+Marine.kJetpackBaseAcceleration = 13
+Marine.kJetPackUpgradeAcceleration = kJetpackUpgradeAcceleration
+
+Marine.kJetpackTakeOffTime = .7
+Marine.kJetpackDelay = .6
+
+Marine.kJetpackUseFuelRate = kJetpackUseFuelRate
+Marine.kJetpackReduceFuelRate = kJetpackReduceUseFuelRate
 
 Marine.networkVars = 
 {
@@ -96,15 +112,23 @@ Marine.networkVars =
     
     // Updated every frame depending if we have a jetpack child object
     hasJetpack                      = "boolean",
+    jetpackId						= "entityid",
     
     // 0 if not using jetpack, time jetpack started being used otherwise
     timeStartedJetpack              = "float",
+    timeLastEnergyCheck				= "float",
+    
+    // time when last jetpack usage has ended
+    lastTimeJetpackEnded			= "float",
     
     // If jetpack is currently active and affecting our movement
     jetpacking                      = "boolean",
     
     // 0-1 fuel which fills over time and is depleted when jetpack used
     jetpackFuel                     = "float",
+    
+    jetpackFuelRate					= "float",
+    jetpackAccelerationBonus		= "interger (0 to 1)",
     
     weaponShouldLiftDuration        = "float",
     weaponLiftInactiveTime          = "float",
@@ -120,12 +144,13 @@ Marine.networkVars =
 
 PrepareClassForMixin(Marine, GroundMoveMixin)
 PrepareClassForMixin(Marine, CameraHolderMixin)
-PrepareClassForMixin(Marine, DisorientableMixin)
+PrepareClassForMixin(Marine, FetchMixin)
 
 function Marine:OnCreate()
 
     InitMixin(self, GroundMoveMixin, { kGravity = Player.kGravity })
     InitMixin(self, CameraHolderMixin, { kFov = Player.kFov })
+    InitMixin(self, FetchMixin)
     
     Player.OnCreate(self)
     
@@ -149,6 +174,8 @@ function Marine:OnCreate()
     
     end
     
+    
+    
 end
 
 function Marine:OnInit()
@@ -158,8 +185,6 @@ function Marine:OnInit()
     if Server then
         InitMixin(self, OrderSelfMixin, { kPriorityAttackTargets = { "Harvester" } })
     end
-    
-    InitMixin(self, DisorientableMixin)
     
     // Calculate max and starting armor differently
     self.armor = 0
@@ -172,9 +197,13 @@ function Marine:OnInit()
     self.squad = 0
     self.timeOfLastCatPack = -1
     self.hasJetpack = false
+    self.jetpackFuel = 0
     self.timeStartedJetpack = 0
     self.jetpacking = false
-    self.jetpackFuel = 0
+    self.jetpackId = Entity.invalidId
+    self.lastTimeJetpackEnded = 0
+    self.jetpackAccelerationBonus = 0
+    self.jetpackFuelRate = Marine.kJetpackUseFuelRate
         
     self.weaponLiftTime = 0
     self.weaponDropTime = 0
@@ -209,7 +238,9 @@ end
 
 function Marine:GetArmorAmount()
 
+	Print("Marine:GetArmorAmount()")
     local armorLevels = 0
+    local jetpackarmorbonus = 0
     
     if(GetTechSupported(self, kTechId.Armor3, true)) then
         armorLevels = 3
@@ -218,8 +249,13 @@ function Marine:GetArmorAmount()
     elseif(GetTechSupported(self, kTechId.Armor1, true)) then
         armorLevels = 1
     end
+
+	if self.hasJetpack and (GetTechSupported(self, kTechId.JetpackArmorTech, true)) then
+		jetpackarmorbonus = 1
+		Print("has jetpack armor bonus")
+	end
     
-    return Marine.kBaseArmor + armorLevels*Marine.kArmorPerUpgradeLevel
+    return Marine.kBaseArmor + armorLevels*Marine.kArmorPerUpgradeLevel + Marine.kJetpackArmorBonus*jetpackarmorbonus
     
 end
 
@@ -237,60 +273,148 @@ function Marine:OnDestroy()
 
 end
 
+function Marine:GiveJetpack()
+	
+	local jetpack = CreateEntity(JetpackOnBack.kMapName, self:GetAttachPointOrigin(Jetpack.kAttachPoint), self:GetTeamNumber())
+	jetpack:SetParent(self)
+    jetpack:SetAttachPoint(Jetpack.kAttachPoint)
+	
+	self.jetpackId = jetpack:GetId()
+	self.hasJetpack = true
+	self.jetpackFuel = 1
+	self.timeStartedJetpack = 0
+	self.lastTimeJetpackEnded = 0	
+	
+	if Server then
+		if (GetTechSupported(self, kTechId.JetpackFuelTech, true)) then
+		
+			self:UpgradeJetpackMobility()
+			
+		end	
+		
+		if (GetTechSupported(self, kTechId.JetpackArmorTech, true)) then
+		
+			local armorPercent = self.armor/self.maxArmor
+	        self.maxArmor = self:GetArmorAmount()
+	        self.armor = self.maxArmor * armorPercent
+        
+        end
+		
+	end
+	
+end
+
+function Marine:DeductJetpackEnergy()
+
+	if self.timeLastEnergyCheck then
+		local jpTime = Shared.GetTime() - self.timeLastEnergyCheck
+		self.jetpackFuel = Clamp(self.jetpackFuel - jpTime * self.jetpackFuelRate, 0, 1)
+	end
+	
+	self.timeLastEnergyCheck = Shared.GetTime()
+
+end
+
+function Marine:HasJetpackDelay()
+
+	if (Shared.GetTime() - self.lastTimeJetpackEnded > Marine.kJetpackDelay) then
+		return false
+	end
+	
+	return true
+	
+end
+
+function Marine:RaiseJetpackEnergy()
+
+	if self.timeLastEnergyCheck and (not self:HasJetpackDelay()) then
+		local jpTime = Shared.GetTime() - self.timeLastEnergyCheck
+		self.jetpackFuel = Clamp(self.jetpackFuel + jpTime * kJetpackReplenishFuelRate, 0, 1)
+	end
+	
+	self.timeLastEnergyCheck = Shared.GetTime()
+
+end
+
+function Marine:UpdateJetpackSteamEffect()
+
+	// produce some steam
+	if self.timeLastThrust == nil then
+		self.timeLastThrust = Shared.GetTime() - .2
+	end
+	
+	if Shared.GetTime() - self.timeLastThrust > .1 then
+	
+		local origin, success = self:GetAttachPointOrigin(Marine.kJetpackNode)
+		
+		if success then
+			Shared.CreateEffect( nil, Marine.kJetpackTrailEffect, nil, Coords.GetTranslation(origin) )
+		end
+		
+		self.timeLastThrust = Shared.GetTime()
+		
+	end
+
+end
+
 function Marine:UpdateJetpack(input)
 
     if self.hasJetpack then
     
+    	if self:GetIsOnGround() and self.lastTimeJetpackEnded then
+    		self.lastTimeJetpackEnded = 0
+		end
+    
         local jumpPressed = (bit.band(input.commands, Move.Jump) ~= 0)
-    
-        // Give jetpack energy over time
-        self.jetpackFuel = Clamp(self.jetpackFuel + input.time * kJetpackReplenishFuelRate, 0, 1)
-    
-        // Update jetpack energy
-        if self.jetpacking then
         
-            self.jetpackFuel = Clamp(self.jetpackFuel - input.time * kJetpackUseFuelRate, 0, 1)
-            
-            if self.jetpackFuel == 0 or not jumpPressed then
-            
-                Shared.StopSound(self, Marine.kJetpackStart)
-                Shared.StopSound(self, Marine.kJetpackLoop)
-                
-                if Client then
-                    Print(Marine.kJetpackEnd)
-                    Shared.PlaySound(self, Marine.kJetpackEnd)
-                end
-                
-                self.jetpacking = false
-                
-                self.timeStartedJetpack = 0
-                
-            end
-            
-            // TODO: Set fuel parameter to give feedback to player about current state
-            
-        end
-        
-        if jumpPressed and self.timeStartedJetpack == 0 and self:GetIsOnGround() and not self.jetpacking then
-        
-            // Start jetpacking
-            if Client then
-            
-                Shared.PlaySound(self, Marine.kJetpackStart)
-                
-                // Start loop sound if we're not playing it already
-                Shared.PlaySound(self, Marine.kJetpackLoop)
+        // handle jetpack start, ensure minimum wait time to deal with sound errors
+        if (Shared.GetTime() - self.lastTimeJetpackEnded > 0.3) and jumpPressed and (self.timeStartedJetpack == 0) and (not self.jetpacking) and (not self:GetIsOnGround()) and self.jetpackFuel > 0 then
 
-            end
+            Shared.PlaySound(self, Marine.kJetpackStart)
+            Shared.PlaySound(self, Marine.kJetpackLoop)
+            
+            local origin, success = self:GetAttachPointOrigin(Marine.kJetpackNode)
+            self:CreateAttachedEffect(Marine.kJetpackEffect, Marine.kJetpackNode )
+            
+            self.onGroundNeedsUpdate = false
             
             self.jetpacking = true
             self.timeStartedJetpack = Shared.GetTime()
                                 
         end
         
+        // handle jetpack stop, ensure minimum flight time to deal with sound errors
+		if self.timeStartedJetpack ~= 0 and ( (Shared.GetTime() - self.timeStartedJetpack) > 0.3) and ((self.jetpackFuel == 0) or (not jumpPressed) or (not self.jetpacking)) then
+
+            Shared.StopSound(self, Marine.kJetpackStart)
+            Shared.StopSound(self, Marine.kJetpackLoop)
+            Shared.PlaySound(self, Marine.kJetpackEnd)
+            Shared.StopEffect(self, Marine.kJetpackEffect, self )
+
+            self.jetpacking = false
+            
+            self.timeStartedJetpack = 0
+            self.lastTimeJetpackEnded = Shared.GetTime()
+                
+		end
+			
+        // Update jetpack energy
+        if self.jetpacking then
+            self:DeductJetpackEnergy()            
+        else
+        	self:RaiseJetpackEnergy()
+    	end
+    	
+    	// TODO: Set fuel parameter to give feedback to player about current state
+        
+        // for debug
+		//Print(tostring(self.jetpackFuel))
+        
     else
     
-        self.jetpackFuel = 0
+    	if self.jetpackFuel ~= 0 then
+        	self.jetpackFuel = 0
+    	end
         
     end
 
@@ -383,7 +507,7 @@ function Marine:UpdateSprintingState(input)
     if(self.desiredSprinting ~= self.sprinting and self:GetCanNewActivityStart()) then
 
         local weapon = self:GetActiveWeapon()
-        if(weapon ~= nil) then       
+        if(weapon ~= nil) then
  
             local viewModelAnimation = weapon:GetSprintEndAnimation()
             if(self.desiredSprinting) then 
@@ -524,7 +648,7 @@ function Marine:GetWeaponInHUDSlot(slot)
 end
 
 function Marine:GetCanJump()
-    return Player.GetCanJump(self) and not self.sprinting
+    return Player.GetCanJump(self) and not self.sprinting and not self:GetIsEthereal()
 end
 
 // Take into account our weapon inventory and current weapon
@@ -567,21 +691,27 @@ function Marine:GetMaxSpeed()
     // Take into account our weapon inventory and current weapon. Assumes a vanilla marine has a scalar of around .8.
     local inventorySpeedScalar = self:GetInventorySpeedScalar() + .17
 
-    // Take into account crouching
-    maxSpeed = ( 1 - self:GetCrouchAmount() * Player.kCrouchSpeedScalar ) * maxSpeed
-
+	if self.jetpacking then
+		maxSpeed = Marine.kWalkMaxSpeed * Marine.kAirSpeedMultiplier
+	else
+		// Take into account crouching
+		maxSpeed = ( 1 - self:GetCrouchAmount() * Player.kCrouchSpeedScalar ) * maxSpeed
+	end
+	
     local adjustedMaxSpeed = maxSpeed * self:GetCatalystMoveSpeedModifier() * self:GetSlowSpeedModifier() * inventorySpeedScalar 
     //Print("Adjusted max speed => %.2f (without inventory: %.2f)", adjustedMaxSpeed, adjustedMaxSpeed / inventorySpeedScalar )
+    
+    // take fetching into account
+    if self.GetIsEthereal and self:GetIsEthereal() then
+    	adjustedMaxSpeed = adjustedMaxSpeed * 2
+	end
+    
     return adjustedMaxSpeed
     
 end
 
 function Marine:GetFootstepSpeedScalar()
     return Clamp(self:GetVelocity():GetLength() / (Marine.kRunMaxSpeed * self:GetCatalystMoveSpeedModifier() * self:GetSlowSpeedModifier()), 0, 1)
-end
-
-function Marine:GetAcceleration()
-    return ConditionalValue(self.sprinting, Player.kRunAcceleration, Player.kAcceleration)
 end
 
 // Returns -1 to 1
@@ -636,13 +766,14 @@ function Marine:UpdateWeaponSwing(input)
 end
 
 function Marine:ConstrainMoveVelocity(moveVelocity)   
-
-    Player.ConstrainMoveVelocity(self, moveVelocity)
-    
-    local activeWeapon = self:GetActiveWeapon()
-
-    if(activeWeapon ~= nil) then
-        moveVelocity = activeWeapon:ConstrainMoveVelocity(moveVelocity)
+    if not self:GetIsEthereal() then
+	    Player.ConstrainMoveVelocity(self, moveVelocity)
+	    
+	    local activeWeapon = self:GetActiveWeapon()
+	
+	    if(activeWeapon ~= nil) then
+	        moveVelocity = activeWeapon:ConstrainMoveVelocity(moveVelocity)
+	    end
     end
     
 end
@@ -726,13 +857,92 @@ function Marine:GetTechButtons(techId)
     if(techId == kTechId.RootMenu) then 
 
         // Show orders     
-        techButtons = { kTechId.SquadAttack, kTechId.SquadMove, kTechId.SquadDefend, kTechId.None,
-                        kTechId.SquadSeekAndDestroy, kTechId.SquadHarass, kTechId.SquadRegroup, kTechId.None }
+        techButtons = { kTechId.SquadAttack, kTechId.SquadMove, kTechId.SquadDefend, kTechId.None,                       
+                        kTechId.SupplyMed, kTechId.SupplyAmmo, kTechId.SupplyCat, kTechId.None,
+                        kTechId.SquadSeekAndDestroy, kTechId.SquadHarass, kTechId.SquadRegroup, kTechId.None}
         
     end
     
     return techButtons
  
+end
+
+function Marine:OverrideTechTreeAction(techNode, position, orientation, commander)
+	
+	local success = false
+    local keepProcessing = true
+
+	if (  (techNode:GetTechId() == kTechId.SupplyMed) or 
+		  (techNode:GetTechId() == kTechId.SupplyAmmo) or
+		  (techNode:GetTechId() == kTechId.SupplyCat) ) then
+								  
+		local team = commander:GetTeam()
+		local cost = techNode:GetCost()
+		
+		if team:GetTeamResources() >= cost then
+		
+			self:Supply(techNode:GetTechId())
+			team:AddTeamResources(-cost)
+			success = true
+			keepProcessing = false
+			
+		end
+		
+  //  else
+  //  	return Player.OverrideTechTreeAction(self, techNode, position, orientation, commander)
+    end
+    
+    return success, keepProcessing
+
+end
+
+function Marine:Supply(techId)
+
+	if techId == kTechId.SupplyAmmo then
+	
+		local weapon = self:GetActiveWeapon()
+        
+        if weapon ~= nil and weapon:isa("ClipWeapon") then
+        
+            if(weapon:GiveAmmo(AmmoPack.kNumClips)) then
+
+                self:PlaySound(AmmoPack.kPickupSound)
+
+            end
+            
+        end  
+              
+    elseif techId == kTechId.SupplyMed then
+    
+        // If player has less than full health or is parasited
+        if( (self:GetHealth() < self:GetMaxHealth()) or (self:GetArmor() < self:GetMaxArmor()) or self:GetGameEffectMask(kGameEffect.Parasite) ) then
+
+            self:AddHealth(MedPack.kHealth, false, true)
+            
+            self:SetGameEffectMask(kGameEffect.Parasite, false)
+            
+            self:PlaySound(MedPack.kHealthSound)
+            
+        end
+    
+    elseif techId == kTechId.SupplyCat then
+    
+        self:PlaySound(CatPack.kPickupSound)
+        self:TriggerEffect("")
+        
+        // Buff player
+        self:ApplyCatPack()
+    
+    end
+    
+    Shared.CreateEffect(nil, Marine.kGetSupply, self)
+
+end
+
+function Marine:SetResearching(techNode, self)
+end
+
+function Marine:OnResearch(researchId)
 end
 
 function Marine:GetIsCatalysted()
@@ -865,6 +1075,8 @@ function Marine:GetPlayerStatusDesc()
             return "Grenade Launcher"
         elseif (weapon:isa("Rifle")) then
             return "Rifle"
+        elseif (weapon:isa("ExtendedRifle")) then
+            return "Extended Rifle"
         elseif (weapon:isa("Shotgun")) then
             return "Shotgun"
         elseif (weapon:isa("Flamethrower")) then
@@ -982,8 +1194,131 @@ function Marine:OnUse(player, elapsedTime, useAttachPoint, usePoint)
     
 end
 
+function Marine:GetIsEthereal()
+	return self:GetEthereal()
+end
+
+if Client then
+function Marine:IsSameDimension()
+	
+	// ethereal players or fades can see each other
+	if Client.GetLocalPlayer():GetIsEthereal() or Client.GetLocalPlayer():isa("Fade") then 
+		return true 
+	end
+	
+	// only visible for same dimension
+	if self:GetIsEthereal() then
+		return false
+	else
+		return true
+	end
+
+end
+end
+
+function Marine:AdjustGravityForce(input, gravity)
+	
+    if self.jetpacking and (self.jetpackFuel > 0) then
+		gravity = 0
+	elseif self.hasJetpack then
+		gravity = Marine.kJetpackGravity
+	end
+	
+	return gravity    
+end
+
+
+function Marine:GetAirMoveScalar()
+	if self.jetpacking and (self.jetpackFuel > 0) then
+		return 1
+	end
+	
+    return Player.GetAirMoveScalar(self)
+end
+
+function Marine:ModifyVelocity(input, velocity)   	
+		
+	// Modify velocity only if jetpacking.
+    if (self:GetJetPackState(input) == 0) then               
+		Player.ModifyVelocity(self, input, velocity)
+
+	// Flight mode	
+	elseif (self:GetJetPackState(input) == 2) then
+	
+		local move = GetNormalizedVector( input.move )	
+		local viewCoords = self:GetViewAngles():GetCoords()		
+		local redirectDir = viewCoords:TransformVector( move )
+		local deltaVelocity = redirectDir * input.time * self:GetAcceleration()
+		
+		velocity.x = velocity.x + deltaVelocity.x			
+		velocity.z = velocity.z + deltaVelocity.z
+		
+	// TakeOff mode
+    elseif (self:GetJetPackState(input) == 3) then
+    	if self:GetIsOnGround() then
+    		velocity.y = 0.5
+		end
+    end
+	
+end
+
+function Marine:GetFrictionForce(input, velocity)
+		
+	// Jetpacking Mode 2: Flight mode
+	if (self:GetJetPackState(input) == 2) then
+		if self:GetIsOnGround() then
+			return Vector(-velocity.x, -velocity.y, -velocity.z) * 7
+		else
+			return Vector(-velocity.x, -velocity.y/2, -velocity.z) * 1.5
+		end	
+	elseif (self:GetJetPackState(input) == 3) then
+		return Vector(0, -velocity.y, 0) * 4.1
+	end	
+	
+	return Player.GetFrictionForce(self, input, velocity)
+	
+end
+
+function Marine:GetAcceleration()
+
+	if self:GetIsEthereal() then
+		return 15
+	elseif self.jetpacking and (self.jetpackFuel > 0) then
+		return Marine.kJetpackBaseAcceleration + Marine.kJetPackUpgradeAcceleration * self.jetpackAccelerationBonus
+	elseif self.sprinting then
+		return Player.kRunAcceleration
+	end
+
+    return Player.kAcceleration
+    
+end
+
+function Marine:GetJetPackState(input)
+	if self.jetpacking and (self.jetpackFuel > 0) then
+	
+		// Default jetpack movement maintains height, allows easier aiming (hover mode)	
+		if ((Shared.GetTime() - self.timeStartedJetpack) < Marine.kJetpackTakeOffTime) and (( Shared.GetTime() - self.lastTimeJetpackEnded > 1.5 ) or self:GetIsOnGround() )then
+		
+			return 3
+			
+		else
+		
+			return 2
+			
+		end
+	end
+	return 0
+end
+
 // No animations for it yet
 function Marine:Taunt()
+end
+
+function Marine:UpgradeJetpackMobility()
+
+	self.jetpackAccelerationBonus = 1
+	self.jetpackFuelRate = Marine.kJetpackUseFuelRate - Marine.kJetpackReduceFuelRate
+
 end
 
 Shared.LinkClassToMap( "Marine", Marine.kMapName, Marine.networkVars )

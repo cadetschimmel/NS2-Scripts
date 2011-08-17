@@ -6,6 +6,7 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 
+Whip.kBombSpeed = 20
 
 function Whip:OnConstructionComplete()
 
@@ -81,22 +82,27 @@ function Whip:GetClosestAttackPoint(target)
     
 end
 
-function Whip:StrikeTarget(target)
+function Whip:StrikeTarget()
 
-    // Hit main target
-    self:DamageTarget(target)
-    
-    // Try to hit other targets close by
-    local closestAttackPoint = self:GetClosestAttackPoint(target)
-    local nearbyEnts = self.targetSelector:AcquireTargets(1000, Whip.kAreaEffectRadius, closestAttackPoint)
-    for index, ent in ipairs(nearbyEnts) do
-    
-        if ent ~= target then
+    local target = self:GetTarget()
+    if(target ~= nil) then
+
+        // Hit main target
+        self:DamageTarget(target)
         
-            local direction = ent:GetModelOrigin() - closestAttackPoint
-            direction:Normalize()
+        // Try to hit other targets close by
+        local closestAttackPoint = self:GetClosestAttackPoint(target)
+        local nearbyEnts = self.targetSelector:AcquireTargets(1000, Whip.kAreaEffectRadius, closestAttackPoint)
+        for index, ent in ipairs(nearbyEnts) do
+        
+            if ent ~= target then
             
-            ent:TakeDamage(Whip.kDamage, self, self, closestAttackPoint, direction)
+                local direction = ent:GetModelOrigin() - closestAttackPoint
+                direction:Normalize()
+                
+                ent:TakeDamage(Whip.kDamage, self, self, closestAttackPoint, direction)
+                
+            end
             
         end
         
@@ -136,10 +142,7 @@ function Whip:UpdateMode(deltaTime)
             self:SetMode(Whip.kMode.Unrooting)
             // when we move, our static targets becomes invalid. As we can't attack until we are rooted again,
             // we don't need to do anything further
-            self.targetSelector:AttackerMoved()
-            
-            // If we are moving we need to remove out current location from the Pathing mesh
-            self:RemoveFromMesh()
+            self.targetSelector:InvalidateStaticCache()
             
         elseif self.desiredMode == Whip.kMode.Moving and (self.mode == Whip.kMode.UnrootedStationary) then
         
@@ -148,8 +151,11 @@ function Whip:UpdateMode(deltaTime)
         elseif (self.desiredMode == Whip.kMode.Rooted) and (self.mode == Whip.kMode.UnrootedStationary or self.mode == Whip.kMode.StartMoving or self.mode == Whip.kMode.Moving or self.mode == Whip.kMode.EndMoving) then
         
             self:SetMode(Whip.kMode.Rooting)
-            // We are being set back to a stationry position and so we need to add ourselves back to the mesh
-            self:AddToMesh()
+           
+        elseif (self.desiredMode == Whip.kMode.Bombarding) and (self.mode == Whip.kMode.Rooted) then
+        
+        	self:SetMode(Whip.kMode.Bombarding)
+        
         end
         
     end
@@ -186,7 +192,13 @@ function Whip:UpdateOrders(deltaTime)
             // Repeatedly trigger movement effect 
             self:TriggerEffects("whip_moving")
     
-            self:MoveToTarget(PhysicsMask.AIMovement, currentOrder:GetLocation(), Whip.kMoveSpeed, deltaTime)
+    		local moveSpeed = Whip.kMoveSpeed
+    		
+    		if self:GetGameEffectMask(kGameEffect.OnInfestation) then
+    			moveSpeed = moveSpeed * 3
+			end
+    		
+            self:MoveToTarget(PhysicsMask.AIMovement, currentOrder:GetLocation(), moveSpeed, deltaTime)
             if(self:IsTargetReached(currentOrder:GetLocation(), kEpsilon)) then
                 self:CompletedCurrentOrder()
             end
@@ -207,17 +219,22 @@ end
 function Whip:UpdateAttack(deltaTime)
 
     // Check if alive because map-placed structures don't die when killed
-
     if self:GetIsBuilt() and self:GetIsAlive() then
-        // Check to see if it's time to fire again
-        local time = Shared.GetTime()
-        if not self.timeOfLastAttack or (time > (self.timeOfLastAttack + Whip.kScanThinkInterval)) then        
-            local target = self:GetTarget()
-            local targetValid = self.targetSelector:ValidateTarget(target)
-            if targetValid then
+        
+        local target = self:GetTarget()
+        local targetValid = self.targetSelector:ValidateTarget(target)
+        if targetValid then
+
+            // Check to see if it's time to fire again
+            local time = Shared.GetTime()
+                    
+            if not self.timeOfLastAttack or (time > (self.timeOfLastAttack + Whip.kScanThinkInterval)) then
+            
                 local delay = self:AdjustFuryFireDelay(Whip.kROF)
-                if(self.timeOfLastStrikeStart == nil or (time > self.timeOfLastStrikeStart + delay)) then                
+                if(self.timeOfLastStrikeStart == nil or (time > self.timeOfLastStrikeStart + delay)) then
+                
                     self:AttackTarget()
+                    
                 end
                 
                 // Update our attackYaw to aim at our current target
@@ -237,33 +254,20 @@ function Whip:UpdateAttack(deltaTime)
                 
                 self.timeOfLastAttack = time
                 
-            else
-                self:AcquireTarget()            
             end
-
             
         end
         
         if self.timeOfNextStrikeHit ~= nil then
         
-            local target = self:GetTarget()
-            
             if Shared.GetTime() > self.timeOfNextStrikeHit then
-            
-                if self.targetSelector:ValidateTarget(target) then
-                
-                    self:StrikeTarget(target)
-                    
-                else
-                
-                    self:AcquireTarget()
-                    
-                    self.timeOfNextStrikeHit = nil
-                    
-                end
-                
+                self:StrikeTarget()
             end
-               
+            
+        elseif not targetValid then
+        
+            self:AcquireTarget()
+            
         end
         
     end
@@ -347,7 +351,12 @@ function Whip:OnAnimationComplete(animName)
         
             self:SetMode(Whip.kMode.UnrootedStationary)
             
-        end
+        elseif self.mode == Whip.kMode.Bombarding then
+	
+			self:SetMode(Whip.kMode.Rooted)
+			self:SetDesiredMode(Whip.kMode.Rooted)
+			
+		end
         
     end
     
@@ -392,8 +401,35 @@ function Whip:TriggerFury()
     
 end
 
-function Whip:TargetBombard(position)
-    return true
+function Whip:TargetBombard(targetPos)
+	
+	if self.mode == Whip.kMode.Rooted then
+        self:TriggerUncloak()
+    	self.bombTarget = targetPos + Vector(0, 0.7, 0)
+		local bombStart = self:GetOrigin() + Vector(0, 1.7, 0)
+		self.bombTarget.y = bombStart.y
+		local direction = self.bombTarget - bombStart
+		direction:Normalize()
+		bombStart = bombStart + direction * 0.6
+		
+		SetAnglesFromVector(self, direction)
+		
+		self:SetDesiredMode(Whip.kMode.Bombarding)
+		self.bombardAnimation = self:GetAnimation()
+		
+	    local bomb = CreateEntity(WhipBomb.kMapName, bombStart, self:GetTeamNumber())
+	    SetAnglesFromVector(bomb, direction)
+	    
+	    bomb:SetOwner(self:GetOwner())
+	
+	    local startVelocity = direction * Whip.kBombSpeed
+	    bomb:SetVelocity(startVelocity)
+	
+	    return true
+    end
+    
+    return false
+	
 end
 
 function Whip:PerformActivation(techId, position, normal, commander)

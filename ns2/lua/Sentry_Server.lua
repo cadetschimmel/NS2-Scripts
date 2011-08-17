@@ -14,6 +14,14 @@ function Sentry:OnConstructionComplete()
         
 end
 
+function Sentry:OnConstructionComplete()
+	if self.mode ~= Sentry.kMode.Unbuilt then
+		self:SetMode(Sentry.kMode.PoweringUp)
+	else
+		Structure.OnConstructionComplete(self)
+	end
+end
+
 function Sentry:OnDestroy()
     
     if self:GetSentryMode() == Sentry.kMode.Attacking then
@@ -240,12 +248,13 @@ end
 
 function Sentry:OnPoweredChange(newPoweredState)
 
-    Structure.OnPoweredChange(self, newPoweredState)
-    
-    if not newPoweredState then
-        self:SetMode(Sentry.kMode.PoweringDown)    
-    else
-        self:SetMode(Sentry.kMode.PoweringUp)
+    if self.ammo ~= 0 then
+    	Structure.OnPoweredChange(self, newPoweredState)
+	    if not newPoweredState then
+	    	self:SetMode(Sentry.kMode.PoweringDown)       
+	    else
+	        self:SetMode(Sentry.kMode.PoweringUp)
+	    end
     end
     
 end

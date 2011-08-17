@@ -5,20 +5,46 @@
 //    Created by:   Charlie Cleveland (charlie@unknownworlds.com)
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
+
 Script.Load("lua/Weapons/Alien/Ability.lua")
+Script.Load("lua/Weapons/Alien/Spray.lua")
 Script.Load("lua/Weapons/Alien/Bomb.lua")
 
-class 'BileBomb' (Ability)
+class 'BileBomb' (Spray)
 
 BileBomb.kMapName = "bilebomb"
-BileBomb.kBombSpeed = 15
+BileBomb.kBombSpeed = 10
+
+local networkVars = {
+    bombMode                = "boolean"
+}
+
+function BileBomb:PerformSecondaryAttack(player)
+
+    self.bombMode = false
+    
+    self:HealSpray(player)
+    
+    return true
+    
+end
+
+function BileBomb:OnCreate()
+    Ability.OnCreate(self)
+    self.chamberPoseParam = 0
+    self.bombMode = true
+end
+
+function BileBomb:CanUseWeapon(player)
+	return player.GetHasTwoHives and player:GetHasTwoHives()
+end
 
 function BileBomb:GetEnergyCost(player)
-    return kBileBombEnergyCost
+    return self:ApplyEnergyCostModifier(kBileBombEnergyCost, player)
 end
 
 function BileBomb:GetIconOffsetY(secondary)
-    return kAbilityOffset.BileBomb
+    return kAbilityOffset.Spit
 end
 
 function BileBomb:GetPrimaryAttackDelay()
@@ -26,14 +52,22 @@ function BileBomb:GetPrimaryAttackDelay()
 end
 
 function BileBomb:GetDeathIconIndex()
-    return kDeathMessageIcon.BileBomb
+
+    if self.bombMode then
+        return kDeathMessageIcon.BileBomb
+    else
+        return kDeathMessageIcon.Spray
+    end
+
 end
 
 function BileBomb:GetHUDSlot()
-    return 3
+    return 2
 end
 
 function BileBomb:PerformPrimaryAttack(player)
+
+	self.bombMode = true
 
     self:FireBombProjectile(player)        
         

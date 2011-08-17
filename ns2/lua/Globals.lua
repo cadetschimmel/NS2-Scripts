@@ -46,7 +46,8 @@ kDefaultPlayerName = "NsPlayer"
 kDefaultWaypointGroup = "GroundWaypoints"
 kAirWaypointsGroup = "AirWaypoints"
 
-kMaxResources = 999
+kMaxResources = 400
+kMaxPRes = 200
 
 // Max number of entities allowed in radius. Don't allow creating any more entities if this number is rearched.
 // Don't include players in count.
@@ -141,7 +142,9 @@ kAlertExpireTime = 20
 
 // Bit mask table for non-stackable game effects. OnInfestation is set if we're on ANY infestation (regardless of team).
 // Always keep "Max" as last element.
-kGameEffect = CreateBitMask( {"InUmbra", "Fury", "Cloaked", "Parasite", "NearDeath", "OnFire", "OnInfestation", "Beacon", "Max"} )
+kGameEffect = CreateBitMask( {"InUmbra", "Fury", "Cloaked", "Parasite", "NearDeath", "Disorient", "OnFire", "OnInfestation", "Beacon", "OnPrimalScream", "Max"} )
+
+
 kGameEffectMax = bit.rshift(kGameEffect.Max, 1)
 
 // Stackable game effects (more than one can be active, server-side only)
@@ -161,6 +164,7 @@ kAlertType = enum( {'Attack', 'Info', 'Request'} )
 
 // DSP enums
 kDSPType = enum( {'NearDeath', 'ShadeDisorientFlange', 'ShadeDisorientLoPass', 'ShadeDisorientEcho'} )
+
 
 // Dynamic light modes for power grid
 kLightMode = enum( {'Normal', 'NoPower', 'LowPower', 'Damaged'} )
@@ -195,7 +199,7 @@ kRelevantToTeam2            = bit.bor(kRelevantToTeam2Unit, kRelevantToTeam2Comm
 kRelevantToReadyRoom        = 16
 
 // Hive sight constants
-kBlipType = enum( {'Undefined', 'Friendly', 'FriendlyUnderAttack', 'Sighted', 'TechPointStructure', 'NeedHealing', 'FollowMe', 'Chuckle', 'Pheromone'} )
+kBlipType = enum( {'Undefined', 'Friendly', 'FriendlyUnderAttack', 'Sighted', 'TechPointStructure', 'NeedHealing', 'FollowMe', 'Chuckle'} )
 
 kFeedbackURL = "http://getsatisfaction.com/unknownworlds/feedback/topics/new?product=unknownworlds_natural_selection_2&display=layer&style=idea&custom_css=http://www.unknownworlds.com/game_scripts/ns2/styles.css"
 
@@ -239,7 +243,6 @@ kNicknameOptionsKey = "nickname"
 kVisualDetailOptionsKey = "visualDetail"
 kSoundVolumeOptionsKey = "soundVolume"
 kMusicVolumeOptionsKey = "musicVolume"
-kVoiceVolumeOptionsKey = "voiceVolume"
 kFullscreenOptionsKey = "graphics/display/fullscreen"
 kDisplayQualityOptionsKey = "graphics/display/quality"
 kInvertedMouseOptionsKey = "graphics/display/invertedmouse"

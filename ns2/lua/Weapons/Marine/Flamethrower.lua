@@ -6,6 +6,7 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Weapon.lua")
+Script.Load("lua/Weapons/Marine/Flame.lua")
 
 class 'Flamethrower' (ClipWeapon)
 
@@ -31,6 +32,7 @@ Flamethrower.kScorchedCinematic = PrecacheAsset("cinematics/marine/flamethrower/
 Flamethrower.kAttackDelay = kFlamethrowerFireDelay
 Flamethrower.kRange = 8
 Flamethrower.kDamage = kFlamethrowerDamage
+Flamethrower.kFlameSpeed = 20
 
 local networkVars = { }
 
@@ -89,15 +91,49 @@ function Flamethrower:GetRange()
 end
 
 function Flamethrower:GetWarmupTime()
-    return .15
+    return 0
 end
 
 function Flamethrower:GetViewModelName()
     return Flamethrower.kViewModelName
 end
 
-function Flamethrower:FirePrimary(player, bullets, range, penetration)
+function Flamethrower:ShootFlame(player)
 
+    if Server then
+
+    local viewAngles = player:GetViewAngles()
+    local viewCoords = viewAngles:GetCoords()
+    local startPoint = self:GetBarrelPoint(player) + viewCoords.xAxis * (-0.4) + viewCoords.yAxis * (-0.3) + viewCoords.zAxis * 0.6
+
+	//if Client then
+    //	self:TriggerEffects("flame_start", {effecthostcoords = Coords.GetTranslation(startPoint + viewCoords.zAxis * 1.5) } )
+    //end
+
+    local flame = CreateEntity(Flame.kMapName, startPoint, player:GetTeamNumber())
+    SetAnglesFromVector(flame, viewCoords.zAxis)
+    
+    flame:SetPhysicsType(Actor.PhysicsType.Kinematic)
+    
+    local startVelocity = viewCoords.zAxis * Flamethrower.kFlameSpeed
+    flame:SetVelocity(startVelocity)
+    
+    flame:SetGravityEnabled(true)
+    
+    // Set flame owner to player so we don't collide with ourselves and so we
+    // can attribute a kill to us and not setting yourself on fire
+    flame:SetOwner(player)
+    
+    end
+    
+end
+
+function Flamethrower:FirePrimary(player, bullets, range, penetration)
+    
+    self:ShootFlame(player)
+    
+    /*
+    
     if Server then
     
     local barrelPoint = self:GetBarrelPoint(player)
@@ -142,7 +178,7 @@ function Flamethrower:FirePrimary(player, bullets, range, penetration)
         
     end    
     
-    end
+    end */
     
 end
 

@@ -33,11 +33,11 @@ Stomp.kSecondaryEnergyCost = 20
 Stomp.kSecondaryAttackDelay = 3         
 
 function Stomp:GetPrimaryEnergyCost(player)
-    return Stomp.kPrimaryEnergyCost
+    return self:ApplyEnergyCostModifier(Stomp.kPrimaryEnergyCost, player)
 end
 
 function Stomp:GetSecondaryEnergyCost(player)
-    return Stomp.kSecondaryEnergyCost
+    return self:ApplyEnergyCostModifier(Stomp.kSecondaryEnergyCost, player)
 end
 
 function Stomp:GetPrimaryAttackDelay()

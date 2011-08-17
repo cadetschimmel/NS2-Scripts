@@ -13,18 +13,21 @@ function Fade:InitWeapons()
     
     self:GiveItem(SwipeBlink.kMapName)
     self:GiveItem(StabBlink.kMapName)
+    self:GiveItem(SwipeFetch.kMapName)
 
     self:SetActiveWeapon(SwipeBlink.kMapName)
     
 end
 
+/*
 function Fade:GetCanTakeDamage()
     return Alien.GetCanTakeDamage(self) and not self:GetIsBlinking()
 end
+*/
 
 function Fade:OnUpdate(deltaTime)
 
     Alien.OnUpdate(self, deltaTime)
-    self:SetIsVisible(not self:GetIsBlinking())
+    //self:SetIsVisible(not self:GetIsBlinking())
     
 end

@@ -525,7 +525,7 @@ function Commander:UpdateGhostStructureVisuals()
         local item = GUI.GetCursorFocus(x, y, Client.GetScreenWidth(), Client.GetScreenHeight())
         if (item ~= nil) then
           valid = false
-        end
+        end 
         
         local coords = Coords.GetIdentity()        
 
@@ -680,6 +680,7 @@ function CommanderUI_IsValid(button, x, y)
             if techNode ~= nil and (techNode:GetIsBuild() or techNode:GetIsBuy() or techNode:GetIsEnergyBuild()) then
             
                 local trace = GetCommanderPickTarget(player, CreatePickRay(player, x, y), false, true)        
+
                 valid = GetIsBuildLegal(player.currentTechId, trace.endPoint, Commander.kStructureSnapRadius, player)
                 
                 if (techNode:GetIsBuild() or techNode:GetIsEnergyBuild()) then
@@ -687,7 +688,7 @@ function CommanderUI_IsValid(button, x, y)
                     if (item ~= nil) then
                         valid = false
                     end
-                end
+                end    
                 
             else
                 valid = true
@@ -1021,7 +1022,7 @@ function Commander:ClickSelect(x, y)
         // Try selecting a unit
         if self:ClickSelectEntities(pickVec) then
     
-            self:SendClickSelectCommand(pickVec, 1)
+            //self:SendClickSelectCommand(pickVec) // sendselection is handled in ClickSelectEntities() now
             
         // If nothing, try to select a squad
         elseif self:isa("MarineCommander") then    
@@ -1057,6 +1058,13 @@ function Commander:SendClickSelectCommand(pickVec)
 
     local message = BuildClickSelectCommand(pickVec)
     Client.SendNetworkMessage("ClickSelect", message, true)
+
+end
+
+function Commander:SendSelectIdCommand(entityId)
+
+    local message = BuildSelectIdMessage(entityId)
+    Client.SendNetworkMessage("SelectId", message, true)
 
 end
 
@@ -1593,6 +1601,7 @@ function Commander:TriggerButtonIndex(index, isAlien)
         self.menuTechId =  kTechId.RootMenu
         self:UpdateSharedTechButtons()
         self:ComputeMenuTechAvailability()
+        self:ComputeMenuTechPointConsume()
     else
         local commButtons = self.buttonsScript
         if CommanderUI_MenuButtonRequiresTarget(index) and commButtons then

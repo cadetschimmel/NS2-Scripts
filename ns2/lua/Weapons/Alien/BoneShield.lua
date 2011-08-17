@@ -31,11 +31,11 @@ BoneShield.kSecondaryEnergyCost = 20
 BoneShield.kSecondaryAttackDelay = 3         
 
 function BoneShield:GetPrimaryEnergyCost(player)
-    return BoneShield.kPrimaryEnergyCost
+    return self:ApplyEnergyCostModifier(BoneShield.kPrimaryEnergyCost, player)
 end
 
 function BoneShield:GetSecondaryEnergyCost(player)
-    return BoneShield.kSecondaryEnergyCost
+    return self:ApplyEnergyCostModifier(BoneShield.kSecondaryEnergyCost, player)
 end
 
 function BoneShield:GetPrimaryAttackDelay()

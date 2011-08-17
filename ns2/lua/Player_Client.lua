@@ -91,6 +91,14 @@ function PlayerUI_GetCrosshairValues()
    
 end
 
+function PlayerUI_GetSpecialCooldown()
+    local player = Client.GetLocalPlayer()
+    if player then
+        return Client.GetLocalPlayer():GetSpecialCooldown()
+    end
+    return 0
+end
+
 function PlayerUI_GetNextWaypointActive()
 
     local player = Client.GetLocalPlayer()
@@ -328,7 +336,7 @@ end
 /**
  * Get the Y position of the crosshair image in the atlas.
  * Listed in this order:
- *   Rifle, Pistol, Axe, Shotgun, Minigun, Rifle with GL, Flamethrower
+ *   Rifle, Pistol, Axe, Shotgun, Minigun, Rifle with GL, Flamethrower, Extended Rifle
  */
 function PlayerUI_GetCrosshairY()
 
@@ -343,7 +351,7 @@ function PlayerUI_GetCrosshairY()
             local index 
             local mapname = weapon:GetMapName()
             
-            if(mapname == Rifle.kMapName or mapname == GrenadeLauncher.kMapName) then 
+            if(mapname == Rifle.kMapName or mapname == GrenadeLauncher.kMapName or mapname == ExtendedRifle.kMapName) then 
                 index = 0
             elseif(mapname == Pistol.kMapName) then
                 index = 1
@@ -359,7 +367,7 @@ function PlayerUI_GetCrosshairY()
             elseif(mapname == SpitSpray.kMapName) then
                 index = 7              
             // Picking blink target
-            elseif (mapname == SwipeBlink.kMapName) and weapon:GetShowingGhost() then
+            elseif (mapname == SwipeFetch.kMapName) then
                 index = 6
             // Blanks
             else
@@ -762,6 +770,15 @@ function Player:UpdateScreenEffects(deltaTime)
         
     end
     
+    local player = Client.GetLocalPlayer()
+    if HasMixin(player, "Fetch") then
+	    if player:GetIsEthereal() then 
+	    	self.screenEffects.fadeBlink:SetActive(true) 
+	    else
+	    	self.screenEffects.fadeBlink:SetActive(false) 
+	    end
+    end
+    
     // Show low health warning if below the threshold and not a spectator.
     local isSpectator = self:isa("Spectator") or self:isa("AlienSpectator")
     if(self:GetHealthScalar() <= Player.kLowHealthWarning) and not isSpectator then
@@ -800,17 +817,21 @@ function Player:UpdateScreenEffects(deltaTime)
     self:SetCloakShaderState(cloakScreenEffectState)
     
     // Play disorient screen effect to show we're near a shade
-    self:UpdateDisorientShader()
+    self:SetDisorientShaderState(self:GetGameEffectMask(kGameEffect.Disorient))
 
+end
+
+function Player:IsSameDimension()
+	return true
 end
 
 // Only called when not running prediction
 function Player:UpdateClientEffects(deltaTime, isLocal)
 
     // Only show local player model and active weapon for local player when third person 
-    // or for other players (not ethereal Fades)
-    local drawWorld = ((not isLocal) or self:GetIsThirdPerson())
-    local drawPlayer = drawWorld and (not self.GetIsEthereal or not self:GetIsEthereal())
+    // or for other players (ethereal fades now handles in IsSameDimension())
+    local drawWorld = ((not isLocal) or self:GetIsThirdPerson()) and self:IsSameDimension()
+    local drawPlayer = drawWorld and self:IsSameDimension()
     self:SetIsVisible(drawPlayer)
     
     local activeWeapon = self:GetActiveWeapon()
@@ -818,11 +839,17 @@ function Player:UpdateClientEffects(deltaTime, isLocal)
         activeWeapon:SetIsVisible( drawWorld )
     end
     
+    if self:GetIsAlive() and self:isa("Marine") and self.hasJetpack and (self.jetpackId ~= Entity.invalidId) then
+    	Shared.GetEntity(self.jetpackId):SetIsVisible(drawWorld)
+	end
+    
     // Hide view model for other players and when in third person
     local viewModel = self:GetViewModelEntity()    
     if viewModel and drawWorld then
         viewModel:SetIsVisible( false )
     end
+    
+    //self:UpdateCloaking()
     
     if isLocal then
         self:UpdateScreenEffects(deltaTime)
@@ -1044,7 +1071,7 @@ function Player:InitScreenEffects()
     self.screenEffects.cloaked:SetActive(false)
     self.screenEffects.disorient = Client.CreateScreenEffect("shaders/Disorient.screenfx")
     self.screenEffects.disorient:SetActive(false)
-    
+
 end
 
 function Player:SetEthereal(ethereal)
@@ -1059,19 +1086,10 @@ function Player:SetCloakShaderState(cloaked)
     end
 end
 
-function Player:UpdateDisorientShader()
-    
-    local amount = 0
-    if HasMixin(self, "Disorientable") then
-        amount = self:GetDisorientedAmount()
-    end
-
-    local state = (amount > 0)
-    if not self:GetIsThirdPerson() or not state then
+function Player:SetDisorientShaderState(state)
+    if not self:GetIsThirdPerson() then
         self.screenEffects.disorient:SetActive(state)
     end
-    
-    self.screenEffects.disorient:SetParameter("amount", amount)
 end
 
 /**

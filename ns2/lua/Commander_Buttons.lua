@@ -90,6 +90,7 @@ end
  * 1 = available and ready, display as pressable
  * 2 = available but not currently, display in red
  * 3 = not available, display grayed out (also for invalid actions, ie Recycle)
+ * 4 = avaiable, but consumes a tech point, displayed green
  */
 function CommanderUI_MenuButtonStatus(index)
 
@@ -120,7 +121,12 @@ function CommanderUI_MenuButtonStatus(index)
                         buttonStatus = ConditionalValue(techNode:GetCost() > 0, 3, 2)
                     else
                         buttonStatus = ConditionalValue(techNode:GetIsAction(), 3, 2)
-                    end                    
+                    end    
+                    
+                elseif player.menuTechButtonConsumesTechPoint[index] then
+                	// display the button in green to indicate consumption of a tech point
+                	buttonStatus = 4
+                                    
                 else
                     // Available
                     buttonStatus = 1
@@ -190,6 +196,7 @@ function Commander:UpdateMenu(deltaTime)
     
     self:UpdateSharedTechButtons()
     self:ComputeMenuTechAvailability()
+    self:ComputeMenuTechPointConsume()
     
 end
 
@@ -290,6 +297,46 @@ function Commander:IsTabSelected (techId)
     return self.buttonsScript:IsTab(techId), self.buttonsScript:IsTabSelected(kTechId.RootMenu)
 end
 
+function Commander:ComputeMenuTechPointConsume()
+
+	
+
+	self.menuTechButtonConsumesTechPoint = {}
+	local consumesTechPoint = false
+	local techNode = nil
+	
+    local techTree = GetTechTree()
+
+	// create a boolean table for all technodes
+    for index, techId in ipairs(self.menuTechButtons) do
+    
+        techNode = techTree:GetTechNode(techId)
+        consumesTechPoint = false
+        
+        // if we have something selected:
+        if not (table.count(self.selectedSubGroupEntityIds) == 0) then
+            
+            // check selected entities, if one of them says that this tech consumes a technode, store true
+            for index, entityId in ipairs(self.selectedSubGroupEntityIds) do
+            
+                local entity = Shared.GetEntity(entityId)
+                
+                if entity.TechConsumesTechPoint then
+                
+                	consumesTechPoint = entity:TechConsumesTechPoint(techId)
+                    break // we can leave at the first entity which supports the function, should be more efficient
+                
+                end
+            end
+            
+        end
+
+        table.insert(self.menuTechButtonConsumesTechPoint, consumesTechPoint)
+    
+    end
+
+end
+
 function Commander:ComputeMenuTechAvailability()
 
     self.menuTechButtonsAllowed = {}
@@ -336,7 +383,7 @@ function Commander:ComputeMenuTechAvailability()
                     end
                 end
             end
-        end       
+        end   
         
         table.insert(self.menuTechButtonsAllowed, menuTechButtonAllowed)
     

@@ -9,8 +9,9 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Alien/Ability.lua")
+Script.Load("lua/Weapons/Alien/Leap.lua")
 
-class 'Parasite' (Ability)
+class 'Parasite' (Leap)
 
 Parasite.kMapName = "parasite"
 
@@ -20,10 +21,6 @@ Parasite.kRange = 1000
 
 function Parasite:GetEnergyCost(player)
     return kParasiteEnergyCost
-end
-
-function Parasite:GetHasSecondary(player)
-    return false
 end
 
 function Parasite:GetHUDSlot()

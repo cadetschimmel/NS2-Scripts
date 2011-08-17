@@ -14,7 +14,13 @@ kTechId = enum({
     'Default', 'Move', 'Attack', 'Build', 'Construct', 'Cancel', 'Recycle', 'Weld', 'Stop', 'SetRally', 'SetTarget',
     
     // Commander menus for selected units
-    'RootMenu', 'BuildMenu', 'AdvancedMenu', 'AssistMenu', 'MarkersMenu', 'UpgradesMenu',
+    'RootMenu', 'BuildMenu', 'AdvancedMenu', 'AssistMenu', 'MarkersMenu', 'UpgradesMenu', 'EggMenu',
+    
+    // Life Form Tech
+    'LerkTech', 'FadeTech', 'OnosTech', 'Morpher',
+    
+    // Egg Types
+    'GorgeEgg', 'LerkEgg', 'FadeEgg', 'OnosEgg',
     
     // Command station menus
     'CommandStationUpgradesMenu',
@@ -57,15 +63,18 @@ kTechId = enum({
     'SquadMove', 'SquadAttack', 'SquadDefend', 'SquadSeekAndDestroy', 'SquadHarass', 'SquadRegroup', 
     
     // Marine tech 
-    'CommandStation', 'MAC', 'Armory', 'InfantryPortal', 'Extractor', 'ExtractorUpgrade', 'PowerPack', 'SentryTech', 'Sentry', 'ARC', 'InfantryPortalTransponderTech', 'InfantryPortalTransponderUpgrade', 'InfantryPortalTransponder',
+    'CommandStation', 'MAC', 'Armory', 'InfantryPortal', 'Extractor', 'ExtractorUpgrade', 'PowerPack', 'ElectrifiedPowerPack', 'SentryTech', 'Sentry', 'ARC', 'InfantryPortalTransponderTech', 'InfantryPortalTransponderUpgrade', 'InfantryPortalTransponder',
     'Scan', 'AmmoPack', 'MedPack', 'CatPack', 'CatPackTech', 'PowerPoint', 'AdvancedArmoryUpgrade', 'Observatory', 'ObservatoryEnergy', 'DistressBeacon', 'PhaseGate', 'RoboticsFactory', 'ArmsLab',
-    'WeaponsModule', 'PrototypeLab', 'AdvancedArmory', 'SentryRefill',
+    'WeaponsModule', 'PrototypeLab', 'AdvancedArmory', 'SentryAmmo',
+    
+    // Marine direct Supply
+    'SupplyMed', 'SupplyAmmo', 'SupplyCat',
     
     // Weapon tech
-    'RifleUpgradeTech', 'ShotgunTech', 'GrenadeLauncherTech', 'FlamethrowerTech', 'NerveGasTech', 'FlamethrowerAltTech', 'DualMinigunTech',
+    'ExtendedRifleTech', 'ShotgunTech', 'GrenadeLauncherTech', 'FlamethrowerTech', 'NerveGasTech', 'FlamethrowerAltTech', 'DualMinigunTech',
     
     // Marine buys
-    'RifleUpgrade', 'NerveGas', 'FlamethrowerAlt',
+    'NerveGas', 'FlamethrowerAlt',
     
     // Research 
     'PhaseTech', 'MACWeldingTech', 'MACSpeedTech', 'MACMinesTech', 'MACEMPTech', 'ARCArmorTech', 'ARCSplashTech', 'JetpackTech', 'ExoskeletonTech',
@@ -74,7 +83,7 @@ kTechId = enum({
     'MACMine', 'MACEMP',
     
     // Weapons 
-    'Rifle', 'Pistol', 'Shotgun', 'Minigun', 'GrenadeLauncher', 'Flamethrower', 'Axe', 'Minigun',
+    'Rifle', 'ExtendedRifle', 'Pistol', 'Shotgun', 'Minigun', 'GrenadeLauncher', 'Flamethrower', 'Axe', 'Minigun',
     
     // Armor
     'Jetpack', 'JetpackFuelTech', 'JetpackArmorTech', 'Exoskeleton', 'ExoskeletonLockdownTech', 'ExoskeletonUpgradeTech',
@@ -86,7 +95,7 @@ kTechId = enum({
     'ARCDeploy', 'ARCUndeploy',
     
     // Commander abilities
-    'NanoDefense', 'ReplicateTech',
+    'NanoDefense', 'ReplicateTech', 'PowerPackElectrify',
     
     // Special tech
     'TwoCommandStations', 'ThreeCommandStations',
@@ -99,16 +108,16 @@ kTechId = enum({
     'Skulk', 'Gorge', 'Lerk', 'Fade', 'Onos', "AlienCommander", "AllAliens",
     
     // Alien abilities (not all are needed, only ones with damage types)
-    'Bite', 'Parasite', 'Spit', 'Spray', 'BileBomb', 'Spikes', 'SpikesAlt', 'Spores', 'HydraSpike', 'SwipeBlink', 'StabBlink', 'Gore', 
+    'Bite', 'Parasite', 'Spit', 'Spray', 'BileBomb', 'Spikes', 'SpikesAlt', 'Spores', 'HydraSpike', 'SwipeBlink', 'StabBlink', 'SwipeFetch', 'Gore', 
     
     // Alien structures 
-    'Hive', 'Harvester', 'HarvesterUpgrade', 'Drifter', 'Egg', 'Cocoon', 'Embryo', 'Hydra', 'Cyst', 'MiniCyst',
+    'Hive', 'Harvester', 'HarvesterUpgrade', 'Drifter', 'Egg', 'Cocoon', 'Embryo', 'Hydra', 'Cyst', 'MiniCyst', 'SporeMine', 'MiniCrag', 'MiniShift', 'MiniShade',
 
-    // Upgrade buildings and abilities (structure, upgraded structure, passive, triggered, targeted)
-    'Crag', 'UpgradeCrag', 'MatureCrag', 'CragHeal', 'CragUmbra', 'CragBabblers',
+    // Upgrade buildings and abilities (mini structure, structure, upgraded structure, passive, triggered, targeted)
     'Whip', 'UpgradeWhip', 'MatureWhip', 'WhipAcidStrike', 'WhipFury', 'WhipBombard',
-    'Shift', 'UpgradeShift', 'MatureShift', 'ShiftRecall', 'ShiftEcho', 'ShiftEnergize', 
-    'Shade', 'UpgradeShade', 'MatureShade', 'ShadeDisorient', 'ShadeCloak', 'ShadePhantasmMenu', 'ShadePhantasmFade', 'ShadePhantasmOnos', 'ShadePhantasmHive',
+    'UpgradeMiniCrag', 'Crag', 'UpgradeCrag', 'MatureCrag', 'CragHeal', 'CragUmbra', 'CragBabblers',    
+    'UpgradeMiniShift', 'Shift', 'UpgradeShift', 'MatureShift', 'ShiftRecall', 'ShiftEcho', 'ShiftEnergize', 
+    'UpgradeMiniShade', 'Shade', 'UpgradeShade', 'MatureShade', 'ShadeDisorient', 'ShadeCloak', 'ShadePhantasmMenu', 'ShadePhantasmFade', 'ShadePhantasmOnos', 'ShadePhantasmHive',
     
     // Whip movement
     'WhipRoot', 'WhipUnroot',
@@ -116,14 +125,14 @@ kTechId = enum({
     // Alien abilities and upgrades - BabblerTech
     'BabblerTech', 'EchoTech', 'PhantasmTech', 
     'Melee1Tech', 'Melee2Tech', 'Melee3Tech', 'AlienArmor1Tech', 'AlienArmor2Tech', 'AlienArmor3Tech',
-    'AdrenalineTech', 'BileBombTech', 'LeapTech', 'BacteriaTech', 'FeintTech', 'SapTech', 'StompTech', 'BoneShieldTech', 'CarapaceTech', 'PiercingTech',
-    'FrenzyTech', 'SwarmTech', 'RegenerationTech', 'CamouflageTech', 
+    'AdrenalineTech', 'BileBombTech', 'LeapTech', 'BlinkTech', 'BacteriaTech', 'FeintTech', 'SapTech', 'StompTech', 'BoneShieldTech', 'CarapaceTech', 'PiercingTech',
+    'FrenzyTech', 'SwarmTech', 'RegenerationTech', 'CamouflageTech',    
     
     // Global upgrades
     'Carapace', 'Regeneration', 'Frenzy', 'Swarm', 'Adrenaline', 'Camouflage',
     
     // Alien-specific upgrades
-    'Leap', 'Bacteria', 'Corpulence', 'HydraAbility', 'HarvesterAbility', 'Piercing', 'Feint', 'Sap', 'Gore', 'Stomp', 'BoneShield',     
+    'Leap', 'Blink', 'Bacteria', 'Corpulence', 'DropStructureAbility', 'HarvesterAbility', 'Piercing', 'Feint', 'Sap', 'Gore', 'Stomp', 'BoneShield',     
     
     // Drifter tech/abilities
     'DrifterFlareTech', 'DrifterFlare', 'DrifterParasiteTech', 'DrifterParasite', 
@@ -133,7 +142,7 @@ kTechId = enum({
     
     'AlienAlertNotEnoughResources', 'AlienAlertResearchComplete', 'AlienAlertUpgradeComplete', 'AlienAlertHiveComplete',
     
-    // Pheromones
+    // Hive markers    
     'ThreatMarker', 'LargeThreatMarker', 'NeedHealingMarker', 'WeakMarker', 'ExpandingMarker',
     
     // Special tech

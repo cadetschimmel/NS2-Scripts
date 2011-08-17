@@ -14,7 +14,6 @@ Script.Load("lua/EnergyMixin.lua")
 Script.Load("lua/BuildingMixin.lua")
 Script.Load("lua/CloakableMixin.lua")
 Script.Load("lua/mixins/ControllerMixin.lua")
-Script.Load("lua/TargetMixin.lua")
 
 class 'Drifter' (LiveScriptActor)
 
@@ -59,11 +58,6 @@ function Drifter:OnCreate()
     LiveScriptActor.OnCreate(self)
 
     InitMixin(self, ControllerMixin )
-    InitMixin(self, PathingMixin)
-    
-    if Server then
-        InitMixin(self, TargetMixin)
-    end
 
     // Create the controller for doing collision detection.
     self:CreateController(PhysicsGroup.CommanderUnitGroup)
@@ -77,9 +71,10 @@ end
 function Drifter:OnInit()
 
     InitMixin(self, DoorMixin)
-    InitMixin(self, EnergyMixin)
-    InitMixin(self, BuildingMixin)
+    InitMixin(self, EnergyMixin )
+    InitMixin(self, BuildingMixin )
     InitMixin(self, CloakableMixin)
+    
     
     self:SetModel(Drifter.kModelName)
     
@@ -163,7 +158,7 @@ function Drifter:OverrideTechTreeAction(techNode, position, orientation, command
     local keepProcessing = true
     
     // Convert build tech actions into build orders
-    if(techNode:GetIsBuild()) then
+    if(techNode:GetIsBuild() or techNode:GetIsBuy()) then
         
         self:GiveOrder(kTechId.Build, techNode:GetTechId(), position, orientation, not commander.queuingOrders, false)
         
@@ -365,15 +360,21 @@ function Drifter:ProcessBuildOrder(moveSpeed)
                         
                 local cost = techNode:GetCost()
                 local team = commander:GetTeam()
+                local costsTeamRes = not techNode:GetIsBuy()
 
-                if(team:GetTeamResources() >= cost) then
+                if(( costsTeamRes and (team:GetTeamResources() >= cost) ) or ( not costsTeamRes and (commander:GetResources() >= cost) ) ) then
                             
                     local success = false
                     local createdStructureId = -1
                     success, createdStructureId = self:AttemptToBuild(techId, groundLocation, Vector(0, 1, 0), currentOrder:GetOrientation(), nil, nil, self)
                                     
                     if(success) then
-                        team:AddTeamResources(-cost)
+                    	if techNode:GetIsBuy() then
+                    		commander:AddResources(-cost)
+                		else
+                        	team:AddTeamResources(-cost)
+                        end
+                        
                         self:CompletedCurrentOrder()
                         self:SendEntityChanged(createdStructureId)
                                     
@@ -439,13 +440,44 @@ end
 function Drifter:GetTechButtons(techId)
 
     if(techId == kTechId.RootMenu) then 
-        return { kTechId.BuildMenu, kTechId.Move, kTechId.Stop, kTechId.DrifterParasite, kTechId.DrifterFlare }
+        return { kTechId.BuildMenu, kTechId.Move, kTechId.Stop, kTechId.EggMenu, kTechId.DrifterFlare, kTechId.DrifterParasite}
     elseif(techId == kTechId.BuildMenu) then 
-        return { kTechId.RootMenu, kTechId.Hive, kTechId.Harvester, kTechId.Whip, kTechId.Crag, kTechId.Shift, kTechId.Shade }
+        return { kTechId.RootMenu, kTechId.Hive, kTechId.Harvester, kTechId.Morpher, 
+        	kTechId.Crag, kTechId.Shift, kTechId.Shade, kTechId.Whip,
+        	kTechId.None, kTechId.None, kTechId.None, kTechId.None }
+    elseif(techId == kTechId.EggMenu) then
+    	return {kTechId.RootMenu, kTechId.Egg, kTechId.GorgeEgg, kTechId.LerkEgg, kTechId.FadeEgg, kTechId.None, kTechId.None, kTechId.None} // TODO: kTechId.OnosEgg
     end
     
     return nil
     
+end
+
+function Drifter:TechConsumesTechPoint(techId)
+	
+	if (techId == kTechId.Crag) or (techId == kTechId.Shift) or (techId == kTechId.Shade) then
+	
+		
+		local structure_name = ""
+		
+		if techId == kTechId.Crag  then structure_name = "Crag"  elseif
+		   techId == kTechId.Shift then structure_name = "Shift" elseif
+		   techId == kTechId.Shade then structure_name = "Shade" end
+		
+		local structures = EntityListToTable(Shared.GetEntitiesWithClassname(structure_name))
+		local mature_structures = EntityListToTable(Shared.GetEntitiesWithClassname("Mature" .. structure_name))
+		local amount = table.count(structures) + table.count(mature_structures)
+		
+		if amount == 0 then
+			return true
+		else
+			return false
+		end
+		
+	else 
+		return false
+	end
+
 end
 
 function Drifter:GetActivationTechAllowed(techId)

@@ -60,7 +60,7 @@ Alien.networkVars =
     
     twoHives                = "boolean",
     
-    threeHives              = "boolean",
+    threeHives              = "boolean"
 }
 
 PrepareClassForMixin(Alien, CloakableMixin)
@@ -79,6 +79,13 @@ function Alien:OnCreate()
     self.twoHives = false
     self.threeHives = false
 
+end
+
+if Client then
+	// override this for gui
+	function Alien:GetSpecialCooldown()
+		return 0
+	end
 end
 
 function Alien:OnInit()
@@ -113,12 +120,27 @@ function Alien:GetEnergy()
     return self.abilityEnergy
 end
 
+// required for shift energize
+function Alien:GetMaxEnergy()
+    return Ability.kMaxEnergy
+end
+
+// required for shift energize
+function Alien:AddEnergy(energy)	
+	self.abilityEnergy = Clamp(self.abilityEnergy + energy, 0, Ability.kMaxEnergy)	
+end
+
 function Alien:GetIsCloakable()
     return true
 end
 
 function Alien:DeductAbilityEnergy(energyCost)
 
+	// make abilities cost more rather than surpress regeneration
+    if self:GetGameEffectMask(kGameEffect.OnFire) then
+        energyCost = energyCost * kOnFireEnergyCostScalar
+    end
+    
     // Reduce energy
     self.abilityEnergy = Clamp(self.abilityEnergy - energyCost, 0, Ability.kMaxEnergy)
     
@@ -210,9 +232,23 @@ function Alien:OnUpdate(deltaTime)
     // Propagate count to client so energy is predicted
     if Server then
         self.energizeLevel = self:GetStackableGameEffectCount(kEnergizeGameEffect)
-
+    
         // Calculate two and three hives so abilities for abilities        
+        local hadTwoHives = self.twoHives
+        local hadThreeHives = self.threeHives
         self:UpdateNumHives()
+        
+        // check if player is allowed to have his current ability
+        if (hadTwoHives and not self.twoHives) or (hadThreeHives and not self.threeHives) then
+        
+        	// switch to slot 1, the alien is not allowed to further use his ability
+        	if not self:GetActiveWeapon():CanUseWeapon() then
+        		self:SwitchWeapon(1)
+        	end
+        
+        end
+        
+        
     end
     
 end
@@ -252,8 +288,9 @@ function Alien:GetArmorAmount()
 end
 
 function Alien:GetRecuperationRate()
-    local scalar = ConditionalValue(self:GetGameEffectMask(kGameEffect.OnFire), kOnFireEnergyRecuperationScalar, 1)
-    return scalar * Alien.kEnergyRecuperationRate
+    //local scalar = ConditionalValue(self:GetGameEffectMask(kGameEffect.OnFire), kOnFireEnergyRecuperationScalar, 1)
+    //return scalar * Alien.kEnergyRecuperationRate
+    return Alien.kEnergyRecuperationRate
 end
 
 function Alien:MovementModifierChanged(newMovementModifierState, input)

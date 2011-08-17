@@ -36,6 +36,14 @@ kAlienStructureEffects =
         },
     },
     
+    upgrade_mini_structure =
+    {
+    	alienUpgradeMiniStructureEffect =
+    	{
+    		{cinematic = "cinematics/alien/structures/upgrade_mini_structure.cinematic", classname = "Structure", isalien = true, done = true},
+    	}
+    },
+    
     death =
     {
         alienStructureDeathParticleEffect =
@@ -333,6 +341,16 @@ kAlienStructureEffects =
         },
     },
     
+    whip_bombarding = 
+    {
+        whipBombardEffects = 
+        {
+        	{sound = "sound/ns2.fev/alien/structures/whip/attack"},
+            {animation = "bombard", force = true},
+        },
+    },
+
+    
     // "cinematics/alien/shade/blind.cinematic"
     // "cinematics/alien/shade/glow.cinematic"
     // "cinematics/alien/shade/phantasm.cinematic"
@@ -343,19 +361,8 @@ kAlienStructureEffects =
         {sound = "sound/ns2.fev/alien/structures/shade/cloak_start"},
         {animation = "phantasm"},
     },
-
-    create_pheromone =
-    {
-        createPheromoneEffects =
-        {
-            // Play different effects for friendlies vs. enemies
-            {sound = "sound/ns2.fev/alien/structures/crag/umbra"/*, sameteam = true*/},            
-            {cinematic = "cinematics/alien/crag/umbra.cinematic", /*sameteam = true,*/ done = true},
-            
-            //{sound = "sound/ns2.fev/alien/structures/crag/umbra", sameteam = false, volume = .3, done = true},            
-        },
-    },    
     
+
 }
 
 GetEffectManager():AddEffectData("AlienStructureEffects", kAlienStructureEffects)

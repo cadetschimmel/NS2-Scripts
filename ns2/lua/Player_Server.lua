@@ -170,6 +170,20 @@ function Player:OnTakeDamage(damage, attacker, doer, point)
     
 end
 
+function Player:GetNumCapturedTechPoints()
+
+	local tp = nil
+	
+	if (self:GetTeamNumber() == kTeam1Index) then
+    	tp = GetEntitiesForTeam("CommandStation", self:GetTeamNumber())
+	else
+		tp = GetEntitiesForTeam("Hive", self:GetTeamNumber())
+	end
+	
+    return Clamp(table.count(tp), 1, ResourceTower.kMaxTechPointMultiplier)
+
+end
+
 // Add resources for kills and play sound
 function Player:AwardResForKill(target)
 
@@ -178,10 +192,10 @@ function Player:AwardResForKill(target)
     if target and target:isa("Player") then
     
         // Give random amount of res
-        resAwarded = math.random(kKillRewardMin, kKillRewardMax) 
+        resAwarded = kKillReward * self:GetNumCapturedTechPoints()
         self:SetResources( self:GetResources() + resAwarded ) 
         
-        //self:GetTeam():SetTeamResources(self:GetTeam():GetTeamResources() + kKillTeamReward)
+        self:GetTeam():SetTeamResources(self:GetTeam():GetTeamResources() + kKillTeamReward)
         
         // Play sound for player and also our commanders
         local resReceivedSoundName = ConditionalValue(self:GetTeamType() == kAlienTeamType, Player.kAlienResReceivedSound, Player.kMarineResReceivedSound)
@@ -330,7 +344,7 @@ function Player:UpdateIncludeRelevancyMask()
 end
 
 function Player:SetResources(amount)
-    self.resources = math.max(math.min(amount, kMaxResources), 0)    
+    self.resources = math.max(math.min(amount, kMaxPRes), 0)    
 end
 
 function Player:GetDeathMapName()

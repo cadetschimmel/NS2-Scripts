@@ -15,7 +15,10 @@ function FireMixin.__prepareclass(toClass)
     local addNetworkFields =
     {        
         stopChance                      = "float",
-        timeLastUpdateStopChance        = "float"          
+        timeLastUpdateStopChance        = "float",
+		numStacks						= "float",
+		timeLastStackAdded				= "float",
+		timeBurnInit                    = "float"
     }
     
     for k, v in pairs(addNetworkFields) do
@@ -29,6 +32,9 @@ function FireMixin:__initmixin()
     
     self.stopChance                 = 0
     self.timeLastUpdateStopChance   = 0
+	self.numStacks					= 0
+	self.timeLastStackAdded			= 0
+	self.timeBurnInit               = 0
 end
 
 function FireMixin:OverrideSetFire(attacker, doer)
@@ -47,6 +53,24 @@ function FireMixin:SetOnFire(attacker, doer)
     self.fireAttackerId = attacker:GetId()
     self.fireDoerId = doer:GetId()
     
+    
+    
+    if self.timeLastStackAdded == 0 or Shared.GetTime() - self.timeLastStackAdded > kFlamethrowerStackRate then
+        self.timeLastStackAdded = Shared.GetTime()
+        if self.numStacks < kFlamethrowerMaxStacks then
+            self.numStacks = self.numStacks + 1;
+        end
+    end
+    
+    local additional_damage = 0
+    
+    if(self.numStacks > 0) then
+        additional_damage = kFlamethrowerDamage * self.numStacks
+        self:TakeDamage(additional_damage, Shared.GetEntity(self.fireAttackerId), Shared.GetEntity(self.fireDoerId)) //additional fire damage per stack
+    end
+
+    self.timeBurnInit = Shared.GetTime()
+    
     self:OverrideSetFire(attacker, doer)
 end
 
@@ -58,6 +82,10 @@ function FireMixin:ClearFire()
     
     self.stopChance                 = 0
     self.timeLastUpdateStopChance   = nil
+	self.timeLastStackAdded			= 0
+	self.numStacks					= 0
+	self.timeBurnInit               = 0
+	
 end
 
 function FireMixin:GetIsOnFire () 
@@ -82,17 +110,29 @@ function FireMixin:GetCanBeSetOnFire ()
 end
 
 function FireMixin:UpdateFire(updateEffectsInterval)    
+
+	//Shared.Message("fire mixin update")
+
     if not self:GetIsOnFire() then
         return
     end
     
     // Do damage over time
-    self:TakeDamage(kBurnDamagePerSecond * updateEffectsInterval, Shared.GetEntity(self.fireAttackerId), Shared.GetEntity(self.fireDoerId))
-    
+    local dot = kBurnDamagePerSecond * updateEffectsInterval * self.numStacks
+	
+	// hack, don't know why those ID's become invalid
+	if self.fireAttackerId and self.fireDoerId then
+		self:TakeDamage(dot, Shared.GetEntity(self.fireAttackerId), Shared.GetEntity(self.fireDoerId))
+	else
+		self:ClearFire()
+	end
     // See if we put ourselves out
-    local stopFireChance = updateEffectsInterval * self:_GetStopChance()
-    if (NetworkRandom() < stopFireChance) then
+    if Shared.GetTime() - self.timeBurnInit > kFlamethrowerBurnDuration then
         self:ClearFire()
     end
+    
+    //local stopFireChance = updateEffectsInterval * self:_GetStopChance()
+    //if (NetworkRandom() < kFlamethrowerDuration) then
+    //    self:ClearFire()
+    //end
 end
-

@@ -14,6 +14,7 @@ Script.Load("lua/LiveMixin.lua")
 Script.Load("lua/OrdersMixin.lua")
 Script.Load("lua/FireMixin.lua")
 Script.Load("lua/PathingMixin.lua")
+Script.Load("lua/FlechetteMixin.lua")
 
 class 'LiveScriptActor' (ScriptActor)
 
@@ -70,6 +71,7 @@ LiveScriptActor.networkVars =
 PrepareClassForMixin(LiveScriptActor, LiveMixin)
 PrepareClassForMixin(LiveScriptActor, OrdersMixin)
 PrepareClassForMixin(LiveScriptActor, FireMixin)
+PrepareClassForMixin(LiveScriptActor, FlechetteMixin)
 
 // Depends on tech id being set before calling
 function LiveScriptActor:OnInit()
@@ -77,6 +79,8 @@ function LiveScriptActor:OnInit()
     InitMixin(self, LiveMixin, { kHealth = LiveScriptActor.kHealth, kArmor = LiveScriptActor.kArmor })
     InitMixin(self, OrdersMixin, { kMoveToDistance = LiveScriptActor.kMoveToDistance })
     InitMixin(self, FireMixin)
+    InitMixin(self, PathingMixin)
+    InitMixin(self, FlechetteMixin)
     
     ScriptActor.OnInit(self)
     

@@ -35,15 +35,11 @@ Blink.kBlinkEnergyCost = kBlinkEnergyCost
 Blink.kBlinkDistance = 20
 Blink.kOrientationScanRadius = 2.5
 Blink.kStartEtherealForce = 15
-Blink.kStartBlinkEnergyCost = .1    // Separate out initial blink cost from continous cost to promote fewer, more significant blinks
-
 // The amount of time that must pass before the player can enter the ether again.
-Blink.kMinEnterEtherealTime = 0.5
+Blink.kMinEnterEtherealTime = 0.8
 
 Blink.networkVars =
-{
-    showingGhost        = "boolean",
-    
+{    
     // True when we're moving quickly "through the ether"
     ethereal           = "boolean",
     
@@ -68,24 +64,15 @@ function Blink:OnHolster(player)
 
     Ability.OnHolster(self, player)
     
-    if self.showingGhost then
-    
-        self.showingGhost = false
-        
-        if Client then
-            self:DestroyGhost()
-        end
-        
-    end
-    
 end
 
 function Blink:GetHasSecondary(player)
-    return true
+	//return true
+    return player.GetHasTwoHives and player:GetHasTwoHives()
 end
 
 function Blink:GetSecondaryEnergyCost(player)
-    return ConditionalValue(self.showingGhost, Blink.kBlinkEnergyCost, 0)
+    return self:ApplyEnergyCostModifier(kBlinkInitialEnergyCost, player)
 end
 
 function Blink:GetSecondaryAttackDelay()
@@ -289,7 +276,7 @@ function Blink:TriggerBlinkOutEffects(player)
     //    self:CreateBlinkOutEffect(player)
     //end
     
-    player:SetAnimAndMode(Fade.kBlinkOutAnim, kPlayerMode.FadeBlinkOut)
+    //player:SetAnimAndMode(Fade.kBlinkOutAnim, kPlayerMode.FadeBlinkOut)
 
 end
 
@@ -299,7 +286,7 @@ function Blink:TriggerBlinkInEffects(player)
         self:TriggerEffects("blink_in", {effecthostcoords = Coords.GetTranslation(player:GetOrigin())})
     end
     
-    player:SetAnimAndMode(Fade.kBlinkInAnim, kPlayerMode.FadeBlinkIn)
+    //player:SetAnimAndMode(Fade.kBlinkInAnim, kPlayerMode.FadeBlinkIn)
     
 end
 
@@ -311,7 +298,6 @@ function Blink:PerformBlink(player)
     if valid then
 
         // Local/view model effects    
-        self.showingGhost = false
 
         self:TriggerBlinkOutEffects(player)
             
@@ -356,9 +342,13 @@ function Blink:GetPrimaryAttackAllowed()
     return not self:GetIsBlinking()
 end
 
-function Blink:PerformPrimaryAttack(player)
+function Blink:OnSetInactive(player)
+	if self.ethereal then
+		self:OnSecondaryAttackEnd(player)
+	end
+end
 
-    self.showingGhost = false
+function Blink:PerformPrimaryAttack(player)
     return true
 end
 
@@ -371,6 +361,7 @@ function Blink:OnSecondaryAttack(player)
         if not self.blinkButtonDown then
             self:SetEthereal(player, true)
             self.blinkButtonDown = true
+            player.isethereal = true
         end
         
     end
@@ -383,6 +374,7 @@ function Blink:OnSecondaryAttackEnd(player)
 
     if self.ethereal then
         self:SetEthereal(player, false)
+        player.isethereal = false
     end
     
     Ability.OnSecondaryAttackEnd(self, player)
@@ -397,20 +389,31 @@ end
 
 function Blink:SetEthereal(player, state)
 
+	if not (player.GetHasTwoHives and player:GetHasTwoHives()) then
+		return false
+	end
+
     // Enter or leave invulnerable invisible fast-moving mode
     if self.ethereal ~= state then
     
+
         if state then
+        
+            // dont activate ethereal mode if we dont have the required energy
+            if player:GetEnergy() < self:ApplyEnergyCostModifier(kBlinkInitialEnergyCost, player) then 
+            	return false 
+            end
+            
             self.etherealStartTime = Shared.GetTime()
             self:TriggerBlinkOutEffects(player)
         else
-            self:TriggerBlinkInEffects(player)            
+            self:TriggerBlinkInEffects(player)
         end
         
         self.ethereal = state
         
         // Set player visibility state
-        player:SetIsVisible(not self.ethereal)
+        //player:SetIsVisible(not self.ethereal)
         player:SetGravityEnabled(not self.ethereal)
         
         player:SetEthereal(state)
@@ -418,56 +421,12 @@ function Blink:SetEthereal(player, state)
         // Give player initial velocity in direction we're pressing, or forward if 
         if self.ethereal then
         
-            local initialBoostDirection = player:GetViewAngles():GetCoords().zAxis
-            if player.desiredMove and player.desiredMove:GetLength() > .01 then
-            
-                // Transform desired move into direction
-                local initialDirection = player:GetViewAngles():GetCoords():TransformVector( player.desiredMove )
-                VectorCopy(initialDirection, initialBoostDirection)
-                initialBoostDirection:Normalize()
-                
-            end
-        
-            // If desired velocity is quite opposite of our current velocity, don't 
-            local velocity = player:GetVelocity() 
-            local newVelocity = /*velocity * .3 +*/ initialBoostDirection * Blink.kStartEtherealForce            
-            player:SetVelocity(newVelocity)
-            
-            // Deduct blink start energy amount
-            player:DeductAbilityEnergy(Blink.kStartBlinkEnergyCost)
-
-        else
-        
-            // Mute current velocity when coming out of blink
-            player:SetVelocity( player:GetVelocity() * .3 )
+        	// drain activation cost
+        	player:DeductAbilityEnergy(kBlinkInitialEnergyCost)
             
         end
         
     end
-    
-end
-
-// Create ghost or cancel ghost (not currently used)
-function Blink:ToggleGhostMode(player)
-
-    // If we've already got a ghost, blink to it
-    if self.showingGhost then
-    
-        //self:PerformBlink(player)    
-        return true
-
-    else    
-
-        // Show ghost if not displayed
-        self.showingGhost = not self.showingGhost
-
-        if Client then
-            //self:TriggerEffects("blink_ghost")
-        end
-        
-    end
-    
-    return true
     
 end
 
@@ -483,7 +442,10 @@ function Blink:OnProcessMove(player, input)
     // End blink mode if out of energy
     if player:isa("Alien") and player:GetEnergy() == 0 and self.ethereal then
         self:SetEthereal(player, false)
-    end
+        player.isethereal = self:GetEthereal()
+	end
+	
+	
         
     Ability.OnProcessMove(self, player, input)
     

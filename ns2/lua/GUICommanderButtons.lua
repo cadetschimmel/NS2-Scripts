@@ -17,11 +17,14 @@ GUICommanderButtons.kButtonStatusDisabled = { Id = 0, Color = Color(0, 0, 0, 0),
 GUICommanderButtons.kButtonStatusEnabled = { Id = 1, Color = Color(1, 1, 1, 1), Visible = true }
 GUICommanderButtons.kButtonStatusRed = { Id = 2, Color = Color(1, 0, 0, 1), Visible = true }
 GUICommanderButtons.kButtonStatusOff = { Id = 3, Color = Color(0.3, 0.3, 0.3, 1), Visible = true }
+GUICommanderButtons.kButtonStatusGreen = { Id = 4, Color = Color(0, 1, 0, 1), Visible = true }
+
 GUICommanderButtons.kButtonStatusData = { }
 GUICommanderButtons.kButtonStatusData[GUICommanderButtons.kButtonStatusDisabled.Id] = GUICommanderButtons.kButtonStatusDisabled
 GUICommanderButtons.kButtonStatusData[GUICommanderButtons.kButtonStatusEnabled.Id] = GUICommanderButtons.kButtonStatusEnabled
 GUICommanderButtons.kButtonStatusData[GUICommanderButtons.kButtonStatusRed.Id] = GUICommanderButtons.kButtonStatusRed
 GUICommanderButtons.kButtonStatusData[GUICommanderButtons.kButtonStatusOff.Id] = GUICommanderButtons.kButtonStatusOff
+GUICommanderButtons.kButtonStatusData[GUICommanderButtons.kButtonStatusGreen.Id] = GUICommanderButtons.kButtonStatusGreen
 
 GUICommanderButtons.kBackgroundTexturePartWidth = 60
 GUICommanderButtons.kBackgroundTexturePartHeight = 46
@@ -439,7 +442,7 @@ function GUICommanderButtons:UpdateInput()
             for i, buttonItem in ipairs(self.buttons) do
                 local buttonStatus = CommanderUI_MenuButtonStatus(i)
                 if GUIItemContainsPoint(buttonItem, mouseX, mouseY) then
-                    if (buttonItem:GetIsVisible() and buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id) and
+                    if (buttonItem:GetIsVisible() and (buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id or buttonStatus == GUICommanderButtons.kButtonStatusGreen.Id) ) and
                        (self.targetedButton == nil or self.targetedButton == i) then
                         self:HighlightButton(buttonItem)
                         tooltipButtonIndex = i
@@ -621,8 +624,8 @@ function GUICommanderButtons:UpdateButtonHotkeys()
     
         local buttonStatus = CommanderUI_MenuButtonStatus(triggeredButton)
         
-        // Only allow hotkeys on enabled buttons.
-        if buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id then
+        // Only allow hotkeys on enabled/green buttons.
+        if buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id or buttonStatus == GUICommanderButtons.kButtonStatusGreen.Id then
         
             local player = Client.GetLocalPlayer()
             player:TriggerButtonIndex(triggeredButton, false)
@@ -688,7 +691,7 @@ function GUICommanderButtons:MousePressed(key, mouseX, mouseY)
         else
             for i, buttonItem in ipairs(self.buttons) do
                 local buttonStatus = CommanderUI_MenuButtonStatus(i)
-                if buttonItem:GetIsVisible() and buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id and
+                if buttonItem:GetIsVisible() and (buttonStatus == GUICommanderButtons.kButtonStatusEnabled.Id or buttonStatus == GUICommanderButtons.kButtonStatusGreen.Id) and
                    GUIItemContainsPoint(buttonItem, mouseX, mouseY) then
                     self:ButtonPressed(i, mouseX, mouseY)
                     break

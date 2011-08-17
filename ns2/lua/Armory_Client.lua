@@ -18,7 +18,7 @@ local categories = { armoryWeapons, armoryArmor }
 // Upgrades for each thing player can buy
 local upgrades =    {  
                     // TODO: Fix this up
-                    {kTechId.GrenadeLauncher, {kTechId.RifleUpgradeTech, kTechId.NerveGasTech}}, 
+                    {kTechId.GrenadeLauncher, {kTechId.ExtendedRifleTech, kTechId.NerveGasTech}}, 
                     {kTechId.Minigun, {kTechId.None}},
                     {kTechId.Flamethrower, {kTechId.FlamethrowerAltTech}},
                     {kTechId.Jetpack, {kTechId.JetpackFuelTech}},
@@ -166,6 +166,8 @@ function ArmoryUI_PurchaseItem(catItemArray)
         local techId = categories[category][itemIndex]
         
         Client.ConsoleCommand("buy " .. tostring(techId))
+        
+        //PrintDetailed(tostring(techId))
     
         i = i + 2
         

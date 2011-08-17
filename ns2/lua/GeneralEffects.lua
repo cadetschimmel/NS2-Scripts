@@ -132,6 +132,7 @@ kGeneralEffectData =
         generalFlinchCinematicEffects =
         //blood from players and sparks from buildings
         {
+            {cinematic = "cinematics/marine/structures/hit.cinematic", classname = "Whip", isalien = true, done = true}, // show sparks instead of blood
             {cinematic = "cinematics/alien/structures/hit_big.cinematic", classname = "Structure", isalien = true, flinch_severe = true, done = true},   
             {cinematic = "cinematics/alien/structures/hit.cinematic", classname = "Structure", isalien = true, done = true},               
             {cinematic = "cinematics/marine/structures/hit_big.cinematic", classname = "Structure", isalien = false, flinch_severe = true, done = true},   
@@ -161,6 +162,8 @@ kGeneralEffectData =
         generalFlinchSoundEffects =
         {        
             // Specific flinch sounds
+            
+            // These use "world_space = true" so that the player taking the damage hears the sound too.
             {sound = "sound/ns2.fev/alien/skulk/wound_serious", classname = "Skulk", flinch_severe = true, done = true},           
             {sound = "sound/ns2.fev/alien/skulk/wound", classname = "Skulk", done = true},           
             {sound = "sound/ns2.fev/alien/gorge/wound_serious", classname = "Gorge", flinch_severe = true, done = true},           
@@ -175,11 +178,15 @@ kGeneralEffectData =
             {sound = "sound/ns2.fev/alien/structures/hive_wound", classname = "Hive", done = true},
             {sound = "sound/ns2.fev/alien/structures/harvester_wound", classname = "Harvester", done = true},  
             {sound = "sound/ns2.fev/alien/structures/hurt", classname = "Structure", isalien = true, done = true}, 
-         
+            
+            // play recoil sound for whip only, "splat" for normal structures
+            {sound = "sound/ns2.fev/materials/metal/metal_scrape", classname = "Whip", damagetype = kDamageType.Heavy, isalien = true, done = true, volume = 0.99}, // play recoil sound instead
+            {sound = "sound/ns2.fev/materials/metal/metal_scrape", classname = "Whip", damagetype = kDamageType.Normal, isalien = true, done = true, volume = 0.99}, // play recoil sound instead
+
             {sound = "sound/ns2.fev/marine/common/spore_wound", classname = "Marine", doer = "Spores", done = true},
             {sound = "sound/ns2.fev/marine/common/wound_serious", classname = "Marine", flinch_severe = true, done = true},
             {sound = "sound/ns2.fev/marine/common/wound", classname = "Marine", done = true}, 
-                     
+              
             {sound = "sound/ns2.fev/marine/structures/hurt", classname = "Structure", isalien = false, done = true},
 
         },

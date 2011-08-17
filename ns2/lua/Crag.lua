@@ -28,8 +28,8 @@ Crag.kHealAmount = 10
 Crag.kMaxTargets = 3
 Crag.kThinkInterval = .25
 Crag.kHealInterval = 2.0
-Crag.kUmbraDuration = 12
-Crag.kUmbraRadius = 10
+Crag.kUmbraDuration = 8
+Crag.kUmbraRadius = 5
 
 // Umbra blocks 1 out of this many bullet
 Crag.kUmbraBulletChance = 2
@@ -153,7 +153,7 @@ function Crag:GetTechButtons(techId)
        
     elseif(techId == kTechId.UpgradesMenu) then 
     
-        techButtons = {kTechId.AlienArmor1Tech, kTechId.AlienArmor2Tech, kTechId.AlienArmor3Tech, kTechId.None, kTechId.CarapaceTech, kTechId.RegenerationTech, kTechId.None}
+        techButtons = {kTechId.CarapaceTech, kTechId.RegenerationTech, kTechId.None, kTechId.None, kTechId.None, kTechId.None, kTechId.None}
         techButtons[kAlienBackButtonIndex] = kTechId.RootMenu
         
     end
@@ -203,11 +203,12 @@ function Crag:OnInit()
     Structure.OnInit(self) 
 
     if Server then 
-        self.targetSelector = TargetSelector():Init(
+        self.targetSelector = Server.targetCache:CreateSelector(
                 self,
                 Crag.kHealRadius, 
                 false, // we heal targets we don't have a los to
-                { kAlienStaticHealTargets, kAlienMobileHealTargets },
+                TargetCache.kMmtl, // yea, we heal what the marines wants to hurt
+                TargetCache.kAshtl,// marine static targets + infestations
                 { HealableTargetFilter() }, // filter away unhurt targets
                 { IsaPrioritizer("Player") }) // and prioritize players
     end

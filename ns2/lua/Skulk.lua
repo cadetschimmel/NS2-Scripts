@@ -38,11 +38,12 @@ Skulk.networkVars =
     wallWalkingNormalGoal       = "compensated vector",
     wallWalkingNormalCurrent    = "compensated vector",
     wallWalkingStickGoal        = "compensated vector",
-    wallWalkingStickEnabled     = "compensated boolean"
+    wallWalkingStickEnabled     = "compensated boolean",
+    wallJumpBoosts				= "integer (0 to 12)"
 }
 
 // Balance, movement, animation
-Skulk.kJumpRepeatTime = .25
+Skulk.kJumpRepeatTime = .35
 Skulk.kViewOffsetHeight = .55
 Skulk.kHealth = kSkulkHealth
 Skulk.kArmor = kSkulkArmor
@@ -50,11 +51,11 @@ Skulk.kLeapVerticalVelocity = 4
 Skulk.kLeapTime = 0.2
 // kLeapPreventStickTime is used as a time period not to stick to walls after leaping.
 Skulk.kLeapPreventStickTime = 0.05
-Skulk.kLeapForce = 10
-Skulk.kMaxSpeed = 7 // 8.7
+Skulk.kLeapForce = 14
+Skulk.kMaxSpeed = 6.2
 Skulk.kMaxWalkSpeed = Skulk.kMaxSpeed / 2
-Skulk.kLeapSpeed = 25
-Skulk.kAcceleration = 65
+Skulk.kLeapSpeed = 18
+Skulk.kAcceleration = 60
 Skulk.kFov = 110
 Skulk.kMass = 45 // ~100 pounds
 Skulk.kWallWalkCheckInterval = .2
@@ -72,6 +73,10 @@ Skulk.kAnimWallRun = "wallrun"
 Skulk.kAnimStartLeap = "leap_start"
 Skulk.kAnimEndLeap = "leap_end"
 Skulk.kAnimLeap = "leap"
+
+Skulk.kWallJumpBoostTime = 0.9 // before it drops off
+Skulk.kBoostPerJumpFactor = .1
+Skulk.kMaxBoosts = 12
 
 PrepareClassForMixin(Skulk, GroundMoveMixin)
 PrepareClassForMixin(Skulk, CameraHolderMixin)
@@ -101,6 +106,8 @@ function Skulk:OnInit()
     
     self.leaping = false
     self.leapingAnimationPlaying = false
+    
+    self.wallJumpBoosts = 0
 
 end
 
@@ -147,6 +154,15 @@ function Skulk:OnLeap()
 
     local velocity = self:GetVelocity()
 
+    if self.wallJumpBoosts < 6 then
+		self.wallJumpBoosts = 6
+		self.timeOfLastJump = Shared.GetTime()
+	elseif self.wallJumpBoosts < Skulk.kMaxBoosts then
+		local newboosts = self.wallJumpBoosts + 2
+		self.wallJumpBoosts = Clamp(newboosts, 0, Skulk.kMaxBoosts)
+		self.timeOfLastJump = Shared.GetTime()
+	end
+		
     local forwardVec = self:GetViewAngles():GetCoords().zAxis
     local newVelocity = velocity + forwardVec * Skulk.kLeapForce
     
@@ -172,7 +188,7 @@ function Skulk:GetCanJump()
 end
 
 function Skulk:GetIsWallWalking()
-    return self.wallWalking
+    return self.wallWalking and not self:GetRecentlyWallJumped()
 end
 
 function Skulk:GetIsLeaping()
@@ -346,7 +362,7 @@ end
 function Skulk:UpdatePosition(velocity, time)
 
     // Fallback on default behavior when on the ground.
-    if self:GetIsOnGround() then
+    if self:GetIsOnGround() or self:GetHasWallJumpBoost() then
         return Alien.UpdatePosition(self, velocity, time)
     end
     
@@ -444,9 +460,13 @@ function Skulk:GetMaxSpeed()
 
     if self.leaping then
         maxspeed = Skulk.kLeapSpeed
+    elseif self:GetHasWallJumpBoost() then
+    	maxspeed = Skulk.kMaxSpeed * ( 1 + Skulk.kBoostPerJumpFactor * self.wallJumpBoosts) + 0.4
     else
         maxspeed = ConditionalValue(self.movementModiferState, Skulk.kMaxWalkSpeed, Skulk.kMaxSpeed)
     end
+    
+    
     
     return maxspeed * self:GetSlowSpeedModifier()
     
@@ -547,7 +567,31 @@ end
  * too soon after we jumped or it will slow us down.
  */
 function Skulk:GetRecentlyWallJumped()
-    return not (self.timeOfLastJump == nil or (Shared.GetTime() > (self.timeOfLastJump + Skulk.kJumpRepeatTime)))
+    return not (self.timeOfLastJump == nil or (Shared.GetTime() > (self.timeOfLastJump + Skulk.kJumpRepeatTime*1.3)))
+end
+
+function Skulk:GetHasWallJumpBoost()
+	if (self:GetVelocity():GetLength() > (Skulk.kMaxSpeed *.7) ) then
+	
+		if self.timeOfLastJump and (Shared.GetTime() < (self.timeOfLastJump + Skulk.kWallJumpBoostTime)) then
+			return true
+		else
+			if self.wallJumpBoosts > 1 then
+				self.wallJumpBoosts = self.wallJumpBoosts - 1
+				self.timeOfLastJump = Shared.GetTime() - (Skulk.kWallJumpBoostTime * .7)
+				return true
+			else
+				self.wallJumpBoosts = 0
+				return false
+			end
+		end
+			
+	else
+		self.wallJumpBoosts = 0
+		return false
+	end
+
+    return self.timeOfLastJump and (Shared.GetTime() < (self.timeOfLastJump + Skulk.kWallJumpBoostTime))
 end
 
 /**
@@ -647,7 +691,7 @@ function Skulk:GetIsCloseToGround(distanceToGround)
     
 end
 
-/*
+
 function Skulk:HandleJump(input, velocity)
 
     // Normal jump
@@ -660,46 +704,40 @@ function Skulk:HandleJump(input, velocity)
 
         // If we're not moving much, leap straight off the wall
         local kWallJumpVelocityMinimum = 2
-        if(velocity:GetLength() < kWallJumpVelocityMinimum) then
+        local playerViewDirection = self:GetViewAngles():GetCoords().zAxis
 
-            local kWallJumpVelocity = 70
-            local wallJumpVelocity = Vector(0, 0, 1)
-            VectorCopy(self.wallWalkingNormalGoal, wallJumpVelocity)
-            wallJumpVelocity:Scale(kWallJumpVelocity)
-            
-            velocity.x = velocity.x + wallJumpVelocity.x
-            velocity.y = velocity.y + wallJumpVelocity.y
-            velocity.z = velocity.z + wallJumpVelocity.z
-            
-            self:SetOverlayAnimation(Player.kAnimStartJump)
+        local kWallJumpVelocity = 65 + self:GetVelocity():GetLength()
+        local wallJumpVelocity = self.wallWalkingNormalCurrent + playerViewDirection
+        wallJumpVelocity:Normalize()
+        //VectorCopy(self.wallWalkingNormalGoal, wallJumpVelocity)
+        wallJumpVelocity:Scale(kWallJumpVelocity)
 
-            self.timeOfLastJump = Shared.GetTime()
-            
-        // Jump off wall surface we're touching
-        else
+        velocity.x = velocity.x + wallJumpVelocity.x
+        velocity.y = kWallJumpVelocity / 12
+        velocity.z = velocity.z + wallJumpVelocity.z
         
-            local viewAngles = self:GetViewAngles()
-            local viewCoords = viewAngles:GetCoords()
+        self:SetVelocity(velocity)
+        
+        self:SetOverlayAnimation(Player.kAnimStartJump)
 
-            // Add jump velocity along view direction and also "up" and away from wall
-            local kWallJumpForce = 4.0
-            local newVelocity = velocity
-
-            newVelocity = newVelocity + viewCoords.yAxis * kWallJumpForce
-            newVelocity = newVelocity + self.wallWalkingNormalGoal * kWallJumpForce
-
-            VectorCopy(newVelocity, velocity)
-            
-            self:SetOverlayAnimation(Player.kAnimStartJump)
-
-            self.timeOfLastJump = Shared.GetTime()
-
+        if (self.wallJumpBoosts < Skulk.kMaxBoosts) and (self:GetVelocity():GetLength() > (self:GetMaxSpeed() - 0.2) ) then
+        	if self.wallJumpBoosts < 5 then
+        		self.wallJumpBoosts = 5
+    		else        
+        		self.wallJumpBoosts = self.wallJumpBoosts + 1
+    		end
+    	end
+	
+    	self.timeOfLastJump = Shared.GetTime()        
+        
+        if not Shared.GetIsRunningPrediction() then
+            self:TriggerEffects("jump", {surface = self:GetMaterialBelowPlayer()})
         end
         
     end
     
 end
-*/
+
 
 function Skulk:GetPlayFootsteps()
 

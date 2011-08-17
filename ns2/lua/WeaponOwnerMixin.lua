@@ -88,6 +88,11 @@ function WeaponOwnerMixin:SetActiveWeapon(weaponMapName)
 
         if (mapName == weaponMapName) then
         
+        	if self:isa("Alien") then
+        		// check if player is allowed to shoot primary, if false then required tech is not reached
+        		if not weapon:CanUseWeapon(self) then return false end
+        	end
+        
             local newWeapon = weapon
             local activeWeapon = self:GetActiveWeapon()
             
@@ -167,6 +172,8 @@ function WeaponOwnerMixin:SwitchWeapon(weaponIndex)
         
         if(weaponIndex >= 1 and weaponIndex <= table.maxn(weaponList)) then
 
+			// hook for weapons / ablities to override
+			self:GetActiveWeapon():OnSetInactive(self)
             success = self:SetActiveWeapon(weaponList[weaponIndex]:GetMapName())
             
             self.timeOfLastWeaponSwitch = Shared.GetTime()

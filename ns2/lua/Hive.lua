@@ -80,7 +80,7 @@ function Hive:GetTechButtons(techId)
     
     if(techId == kTechId.RootMenu) then 
     
-        techButtons = { kTechId.Cyst, kTechId.Drifter, kTechId.MarkersMenu, kTechId.UpgradesMenu, kTechId.SetRally, kTechId.Metabolize }
+        techButtons = { kTechId.Cyst, kTechId.Drifter, kTechId.MarkersMenu, kTechId.UpgradesMenu, kTechId.SetRally, kTechId.Metabolize, kTechId.None }
         
     elseif(techId == kTechId.MarkersMenu) then 
         techButtons = {kTechId.RootMenu, kTechId.ThreatMarker, kTechId.LargeThreatMarker, kTechId.NeedHealingMarker, kTechId.WeakMarker, kTechId.ExpandingMarker}

@@ -66,7 +66,6 @@ function InitTechTreeMaterialOffsets()
     kMarineTechIdToMaterialOffset[kTechId.CommandStationUpgradesMenu] = 68
     
     kMarineTechIdToMaterialOffset[kTechId.Armory] = 1
-    kMarineTechIdToMaterialOffset[kTechId.RifleUpgradeTech] = 66
     kMarineTechIdToMaterialOffset[kTechId.MAC] = 2
     // Change offset in CommanderUI_GetIdleWorkerOffset when changing extractor
     kMarineTechIdToMaterialOffset[kTechId.Extractor] = 3
@@ -78,6 +77,7 @@ function InitTechTreeMaterialOffsets()
     kMarineTechIdToMaterialOffset[kTechId.PowerPoint] = 10    
     // TODO: Change this
     kMarineTechIdToMaterialOffset[kTechId.PowerPack] = 10
+    kMarineTechIdToMaterialOffset[kTechId.ElectrifiedPowerPack] = 10
     kMarineTechIdToMaterialOffset[kTechId.ArmsLab] = 11
     
     // Second row - Non-player orders
@@ -117,12 +117,16 @@ function InitTechTreeMaterialOffsets()
     kMarineTechIdToMaterialOffset[kTechId.Flamethrower] = 42
     kMarineTechIdToMaterialOffset[kTechId.FlamethrowerAltTech] = 42
     kMarineTechIdToMaterialOffset[kTechId.SentryTech] = 43
-    kMarineTechIdToMaterialOffset[kTechId.SentryRefill] = 36
+    kMarineTechIdToMaterialOffset[kTechId.SentryAmmo] = 36
     kMarineTechIdToMaterialOffset[kTechId.ARC] = 44
     kMarineTechIdToMaterialOffset[kTechId.CatPack] = 45
     kMarineTechIdToMaterialOffset[kTechId.CatPackTech] = 45
     kMarineTechIdToMaterialOffset[kTechId.NerveGasTech] = 46
     kMarineTechIdToMaterialOffset[kTechId.DualMinigunTech] = 47
+    
+    kMarineTechIdToMaterialOffset[kTechId.SupplyAmmo] = 36
+    kMarineTechIdToMaterialOffset[kTechId.SupplyMed] = 37
+    kMarineTechIdToMaterialOffset[kTechId.SupplyCat] = 45
     
     // Fifth row 
     kMarineTechIdToMaterialOffset[kTechId.ShotgunTech] = 48
@@ -148,9 +152,10 @@ function InitTechTreeMaterialOffsets()
     kMarineTechIdToMaterialOffset[kTechId.ExtractorUpgrade] = 64
     kMarineTechIdToMaterialOffset[kTechId.AdvancedArmory] = 65
     kMarineTechIdToMaterialOffset[kTechId.AdvancedArmoryUpgrade] = 65
-    kMarineTechIdToMaterialOffset[kTechId.RifleUpgradeTech] = 66
+    kMarineTechIdToMaterialOffset[kTechId.ExtendedRifleTech] = 66
     kMarineTechIdToMaterialOffset[kTechId.PhaseGate] = 67
     kMarineTechIdToMaterialOffset[kTechId.PhaseTech] = 68
+    kMarineTechIdToMaterialOffset[kTechId.PowerPackElectrify] = 65
     kMarineTechIdToMaterialOffset[kTechId.ARCSplashTech] = 69
     kMarineTechIdToMaterialOffset[kTechId.ARCArmorTech] = 70
 
@@ -210,6 +215,7 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.Infestation] = 23
     kAlienTechIdToMaterialOffset[kTechId.MetabolizeTech] = 14
     kAlienTechIdToMaterialOffset[kTechId.Metabolize] = 15
+    kAlienTechIdToMaterialOffset[kTechId.EggMenu] = 30
        
     // Lifeforms
     kAlienTechIdToMaterialOffset[kTechId.Skulk] = 16
@@ -219,6 +225,10 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.Onos] = 20
     kAlienTechIdToMaterialOffset[kTechId.Cancel] = 21
     
+    kAlienTechIdToMaterialOffset[kTechId.LerkTech] = 18
+    kAlienTechIdToMaterialOffset[kTechId.FadeTech] = 19
+    kAlienTechIdToMaterialOffset[kTechId.OnosTech] = 20
+    
     // Structures
     kAlienTechIdToMaterialOffset[kTechId.Hive] = 24
     // Change offset in CommanderUI_GetIdleWorkerOffset when changing harvester
@@ -227,6 +237,12 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.HarvesterUpgrade] = 12
     kAlienTechIdToMaterialOffset[kTechId.Egg] = 30
     kAlienTechIdToMaterialOffset[kTechId.Cocoon] = 31
+    
+    // Egg Types
+    kAlienTechIdToMaterialOffset[kTechId.GorgeEgg] = 17
+    kAlienTechIdToMaterialOffset[kTechId.LerkEgg] = 18
+    kAlienTechIdToMaterialOffset[kTechId.FadeEgg] = 19
+    kAlienTechIdToMaterialOffset[kTechId.OnosEgg] = 20
     
     // $AS - Right now we do not have an icon for power nodes for aliens
     // so we are going to use the question mark until we get something
@@ -249,8 +265,13 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.NeedHealingMarker] = 37
     kAlienTechIdToMaterialOffset[kTechId.WeakMarker] = 38
     kAlienTechIdToMaterialOffset[kTechId.ExpandingMarker] = 39
+    
+    // Morpher
+    kAlienTechIdToMaterialOffset[kTechId.Morpher] = 32
    
     // Crag
+    kAlienTechIdToMaterialOffset[kTechId.MiniCrag] = 40
+    kAlienTechIdToMaterialOffset[kTechId.UpgradeMiniCrag] = 40
     kAlienTechIdToMaterialOffset[kTechId.Crag] = 40
     kAlienTechIdToMaterialOffset[kTechId.UpgradeCrag] = 41
     kAlienTechIdToMaterialOffset[kTechId.MatureCrag] = 42
@@ -274,6 +295,8 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.BileBomb] = 55
 
     // Shift
+    kAlienTechIdToMaterialOffset[kTechId.MiniShift] = 56
+    kAlienTechIdToMaterialOffset[kTechId.UpgradeMiniShift] = 56
     kAlienTechIdToMaterialOffset[kTechId.Shift] = 56
     kAlienTechIdToMaterialOffset[kTechId.UpgradeShift] = 57
     kAlienTechIdToMaterialOffset[kTechId.MatureShift] = 58
@@ -285,6 +308,8 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.Leap] = 16
     
     // Shade
+    kAlienTechIdToMaterialOffset[kTechId.MiniShade] = 64
+    kAlienTechIdToMaterialOffset[kTechId.UpgradeMiniShade] = 64
     kAlienTechIdToMaterialOffset[kTechId.Shade] = 64
     kAlienTechIdToMaterialOffset[kTechId.UpgradeShade] = 65
     kAlienTechIdToMaterialOffset[kTechId.MatureShade] = 66

@@ -37,6 +37,10 @@ function GrenadeLauncher:GetViewModelName()
     return Rifle.kViewModelName
 end
 
+function GrenadeLauncher:GetHasSecondary(player)
+	return true
+end	
+
 function GrenadeLauncher:GetWeight()
     // A bit lighter then NS1
     return Rifle.GetWeight(self) + ((self:GetAmmo() + self:GetClip()) / self:GetClipSize()) * 0.01

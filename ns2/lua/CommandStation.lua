@@ -14,6 +14,7 @@ CommandStation.kLevel1MapName         = "commandstationl1"
 
 CommandStation.kModelName = PrecacheAsset("models/marine/command_station/command_station.model")
 
+
 CommandStation.kActiveSound = PrecacheAsset("sound/ns2.fev/marine/structures/command_station_active")
 CommandStation.kUnderAttackSound = PrecacheAsset("sound/ns2.fev/marine/voiceovers/commander/command_station_under_attack")
 
@@ -65,6 +66,43 @@ function CommandStation:GetTechAllowed(techId, techNode, player)
     return Structure.GetTechAllowed(self, techId, techNode, player)
 end
 
+
+function CommandStation:GetTechButtons(techid)
+
+    return { kTechId.None, kTechId.None, kTechId.None, kTechId.SentryAmmo,
+             kTechId.None, kTechId.None, kTechId.None, kTechId.None }	
+
+end
+
+function CommandStation:PerformActivation(techId, position, normal, commander)
+
+    local success = false
+    
+    if self:GetIsBuilt() and self:GetIsActive() then
+    
+        if techId == kTechId.SentryAmmo then
+        
+            success = self:TriggerSentryRefill(position)
+
+        else        
+            success = LiveScriptActor.PerformActivation(self, techId, position, normal, commander)
+        end
+    
+    end
+    
+    return success
+
+end
+
+function CommandStation:TriggerSentryRefill(position)
+
+	// trigger effect and refill sentry
+	local sentryammo_pack = CreateEntity(SentryAmmo.kMapName, position, self:GetTeamNumber())
+	local success = sentryammo_pack:RefillNearestSentry()
+	DestroyEntity(sentryammo_pack)
+    return success
+
+end
 
 Shared.LinkClassToMap("CommandStation",    CommandStation.kLevel1MapName, networkVars)
 

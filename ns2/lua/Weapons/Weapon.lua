@@ -124,8 +124,17 @@ function Weapon:GetPrimaryAttackPrefix()
     return self:GetMapName()
 end
 
+// hook for child classes (which may depend on tech level)
+function Weapon:CanUseWeapon(player)
+	return true
+end
+
 function Weapon:GetSecondaryAttackPrefix()
     return self:GetMapName()
+end
+
+function Weapon:GetHasSecondary(player)
+	return false
 end
 
 function Weapon:OnPrimaryAttack(player)
@@ -154,6 +163,10 @@ end
 function Weapon:OnHolster(player)
     self.isHostered = true
     self:SetIsVisible(false)
+end
+
+// override this
+function Weapon:OnSetInactive(player)
 end
 
 function Weapon:OnDraw(player, previousWeaponMapName)
@@ -270,7 +283,7 @@ function Weapon:ApplyMeleeHit(player, damage, trace, direction)
 
     if Server then
         self:ApplyMeleeHitEffects(player, damage, trace.entity, trace.endPoint, direction)
-        TriggerHitEffects(self, trace.entity, trace.endPoint, trace.surface, true)
+    	TriggerHitEffects(self, trace.entity, trace.endPoint, trace.surface, true)
     end
     
 end
@@ -284,7 +297,7 @@ end
 
 function Weapon:ApplyMeleeHitEffects(player, damage, target, endPoint, direction)
 
-    if(target ~= nil and Server and target:isa("LiveScriptActor")) then
+    if target ~= nil and Server and target:isa("LiveScriptActor")  and GetGamerules():CanEntityDoDamageTo(player, target) then
     
         if(target:TakeDamage(damage, player, self, endPoint, direction)) then
             self:OnTargetKilled(player)        

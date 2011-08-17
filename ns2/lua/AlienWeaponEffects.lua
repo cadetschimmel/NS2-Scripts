@@ -23,10 +23,11 @@ kAlienWeaponEffects =
             // Brian TODO: Change to something cooler
             {player_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", doer = "Bomb", done = true},        
             
-            //{player_cinematic = "cinematics/alien/lerk/spike_impact.cinematic", doer = "Spike", done = true},
+            {player_cinematic = "cinematics/alien/lerk/spike_impact.cinematic", doer = "Spikes", done = true},
             //{player_cinematic = "cinematics/alien/hydra/spike_impact.cinematic", doer = "HydraSpike", done = true},
             {player_cinematic = "cinematics/materials/%s/scrape.cinematic", doer = "SwipeBlink", done = true},
             {player_cinematic = "cinematics/materials/%s/scrape.cinematic", doer = "StabBlink", done = true},
+            {player_cinematic = "cinematics/materials/%s/scrape.cinematic", doer = "SwipeFetch", done = true},
 
         },
         generalHitSounds = 
@@ -43,6 +44,7 @@ kAlienWeaponEffects =
             //{sound = "sound/ns2.fev/materials/%s/spikes_ricochet", doer = "HydraSpike", done = true},
             {sound = "sound/ns2.fev/materials/%s/scrape", doer = "SwipeBlink", done = true},
             {sound = "sound/ns2.fev/materials/%s/scrape", doer = "StabBlink", done = true},
+            {sound = "sound/ns2.fev/materials/%s/scrape", doer = "SwipeFetch", done = true},
         }
     },
 
@@ -53,7 +55,7 @@ kAlienWeaponEffects =
         {
             {private_sound = "sound/ns2.fev/alien/gorge/spit_hit", doer = "Spit", volume = .3, done = true},
             {private_sound = "sound/ns2.fev/alien/gorge/bilebomb_hit", doer = "Bomb", volume = .3, done = true},
-            {private_sound = "sound/ns2.fev/alien/common/spikes_ricochet", doer = "Spike", volume = .3, done = true},
+            {private_sound = "sound/ns2.fev/alien/common/spikes_ricochet", doer = "Spikes", volume = .3, done = true},
         },
     },
     
@@ -69,7 +71,7 @@ kAlienWeaponEffects =
             
             // Gorge
             {viewmodel_animation = { {1, "idle"}, {.3, "idle2"}, {.05, "idle3"} }, classname = "SpitSpray", done = true},            
-            {viewmodel_animation = { {1, "idle"}/*, {.3, "idle2"}, {.05, "idle3"}*/ }, classname = "HydraAbility", done = true},
+            {viewmodel_animation = { {1, "idle"}/*, {.3, "idle2"}, {.05, "idle3"}*/ }, classname = "DropStructureAbility", done = true},
             
             // Lerk
             {viewmodel_animation = {{1, "idle"}, {.1, "idle2"}, {.5, "idle3"} }, classname = "Spikes", done = true},
@@ -78,6 +80,7 @@ kAlienWeaponEffects =
             // Fade
             {viewmodel_animation = {{1, "swipe_idle"}, {.1, "swipe_idle2"}}, classname = "SwipeBlink", done = true},
             {viewmodel_animation = {{1, "stab_idle"}, {.1, "stab_idle2"}}, classname = "StabBlink", done = true},
+            {viewmodel_animation = {{1, "swipe_idle"}, {.8, "swipe_idle2"}}, classname = "SwipeFetch", done = true}, // we want special idle animation appear more often, to make a visual distinction
             
             // Onos
             {viewmodel_animation = {{1, "gore_idle"}/*, {.1, "gore_idle2"}, {.5, "gore_idle3"}*/}, classname = "Gore", done = true},
@@ -99,6 +102,8 @@ kAlienWeaponEffects =
         
             {viewmodel_animation = "swipe_from_stab", classname = "SwipeBlink", speed = 2, from = "StabBlink", done = true},
             {viewmodel_animation = "stab_from_swipe", classname = "StabBlink", speed = 2, from = "SwipeBlink", done = true},
+            {viewmodel_animation = "swipe_from_stab", classname = "SwipeFetch", speed = 2, from = "StabBlink", done = true},
+            {viewmodel_animation = "swipe_idle", classname = "SwipeFetch", speed = 2, from = "SwipeBlink", done = true},
             
             {viewmodel_animation = "spore_draw", classname = "Spores", speed = 1, from = "Spikes", done = true},
             {viewmodel_animation = "spike_draw", classname = "Spikes", speed = 1, from = "Spores", done = true},
@@ -121,13 +126,13 @@ kAlienWeaponEffects =
             {
             viewmodel_animation = 
               {
-              {1, "bite_attack"},
+              {1, "bite_attack"}, speed = 10
               //{.5, "bite_attack2"},
               //{.5, "bite_attack3"},
               //{.5, "bite_attack4"},
               },
             },
-            {overlay_animation = "bite", force = true},
+            //{overlay_animation = "bite", force = true},
         },
     },
     
@@ -152,7 +157,19 @@ kAlienWeaponEffects =
             {player_cinematic = "cinematics/alien/skulk/parasite_fire.cinematic"},
             {viewmodel_cinematic = "cinematics/alien/skulk/parasite_view.cinematic", attach_point = "Tongue_01", done = true},
          },
-    },   
+    }, 
+    
+    // Leap
+    parasite_alt_attack =
+    {
+        parasiteAltAttackEffects = 
+        {
+            // TODO: Take volume or hasLeap
+            {sound = "sound/ns2.fev/alien/skulk/bite_alt"},
+            {viewmodel_animation = "bite_leap"},
+            {animation = "leap"},
+        },
+    },    
     
     // When a target is parasited - played on target
     parasite_hit = 
@@ -208,6 +225,32 @@ kAlienWeaponEffects =
             {overlay_animation = "spit", force = true},
         },
     },
+    
+    spray_alt_attack =
+    {
+        sprayFireEffects = 
+        {
+            // Use player_cinematic because at world position, not attach_point
+            {player_cinematic = "cinematics/alien/gorge/healthspray.cinematic"},
+            {viewmodel_cinematic = "cinematics/alien/gorge/healthspray_view.cinematic", attach_point = "gorge_view_root"},
+            {sound = "sound/ns2.fev/alien/gorge/heal_spray"},            
+            {viewmodel_animation = "spray_attack", force = true},         
+            {overlay_animation = "healthspray", force = true},        
+        },
+    },
+    
+    bilebomb_alt_attack =
+    {
+        sprayBombEffects = 
+        {
+            // Use player_cinematic because at world position, not attach_point
+            {player_cinematic = "cinematics/alien/gorge/healthspray.cinematic"},
+            {viewmodel_cinematic = "cinematics/alien/gorge/healthspray_view.cinematic", attach_point = "gorge_view_root"},
+            {sound = "sound/ns2.fev/alien/gorge/heal_spray"},            
+            {viewmodel_animation = "spray_attack", force = true},         
+            {overlay_animation = "healthspray", force = true},        
+        },
+    },
 
     bilebomb_hit =
     {
@@ -224,7 +267,10 @@ kAlienWeaponEffects =
     {
         gorgeCreateEffects =
         {
-            {sound = "sound/ns2.fev/alien/structures/spawn_small"},
+            {sound = "sound/ns2.fev/alien/gorge/create_structure_start"},
+            {viewmodel_animation = "chamber_attack"},
+            {player_cinematic = "cinematics/alien/gorge/create.cinematic", attach_point = "Head"},
+            {viewmodel_cinematic = "cinematics/alien/gorge/create_view.cinematic", attach_point = ""},
         },
     },
     
@@ -266,7 +312,6 @@ kAlienWeaponEffects =
             {sound = "sound/ns2.fev/alien/gorge/create_structure_start"},
             {viewmodel_animation = "chamber_attack"},
             {player_cinematic = "cinematics/alien/gorge/create.cinematic", attach_point = "Head"},
-            {viewmodel_cinematic = "cinematics/alien/gorge/create_view.cinematic", attach_point = ""},
         },
     },
     
@@ -285,7 +330,6 @@ kAlienWeaponEffects =
             {sound = "sound/ns2.fev/alien/gorge/create_structure_start"},
             {viewmodel_animation = "chamber_attack"},
             {player_cinematic = "cinematics/alien/gorge/create.cinematic", attach_point = "Head"},
-            {viewmodel_cinematic = "cinematics/alien/gorge/create_view.cinematic", attach_point = ""},
         },
     },
     
@@ -315,15 +359,26 @@ kAlienWeaponEffects =
         },
     },
     
-    spikes_alt_attack =
+    // world effect
+    umbra_cloud =
     {
-
-        spikeZoomEffect = 
+        lerkUmbraEffects =
         {
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoom", upgraded = false, done = true},
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed_pierce", upgraded = true, done = true},
+            {sound = "sound/ns2.fev/alien/structures/crag/umbra"},
+            {cinematic = "cinematics/alien/crag/umbra.cinematic"},            
         },
-    },
+    },  
+    
+    // viewmodel effect
+    umbra_attack =
+    {
+        lerkUmbraEffects =
+        {
+            {sound = "sound/ns2.fev/alien/structures/crag/umbra"},
+            {viewmodel_animation = "spores_attack"},
+            {overlay_animation = "spore"},            
+        },
+    },  
     
     // Play snipe sound where it hits so players know what's going on (played at spot in world where spike hits - not for a target)
     spikes_snipe_miss =
@@ -360,6 +415,18 @@ kAlienWeaponEffects =
         },
     },
     
+    sporemine_attack =
+    {
+        sporemineAttackEffects = 
+        {
+            {sound = "sound/ns2.fev/alien/gorge/bilebomb"},
+            {viewmodel_animation = "spores_attack"},
+            {overlay_animation = "spore"},
+            {viewmodel_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", attach_point = "fxnode_hole_left"},
+            //{viewmodel_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", attach_point = "fxnode_hole_right"},
+        },
+    },
+    
     spores =
     {
         sporesCreateEffects = 
@@ -370,6 +437,21 @@ kAlienWeaponEffects =
     },
     
     swipe_attack = 
+    {
+        swipeAttackSounds =
+        {
+            {sound = "sound/ns2.fev/alien/fade/swipe_structure", surface = "structure", done = true},
+            {sound = "sound/ns2.fev/alien/fade/swipe"},
+        },
+        
+        swipeAttackAnims =
+        {
+            {viewmodel_animation = {{1, "swipe_attack"}, {1, "swipe_attack2"}, {1, "swipe_attack3"}, {1, "swipe_attack4"}, {1, "swipe_attack5"}, {1, "swipe_attack6"}}, force = true},            
+            {overlay_animation = { {1, "swipe"}, {1, "swipe2"}, {1, "swipe3"}, {1, "swipe4"}, {1, "swipe5"}, {1, "swipe6"} }, force = true},
+        },
+    },
+    
+    swipefetch_attack = 
     {
         swipeAttackSounds =
         {
@@ -403,6 +485,28 @@ kAlienWeaponEffects =
             
             // Play sound with randomized positional offset (in sound) at place we're leaving
             {sound = "sound/ns2.fev/alien/fade/blink"},
+        },
+    },
+    
+    fade_leap =
+    {
+        blinkOutEffects =
+        {        
+            {cinematic = "cinematics/alien/fade/blink_out.cinematic"},
+            
+            // Play sound with randomized positional offset (in sound) at place we're leaving
+            {sound = "sound/ns2.fev/alien/common/alien_menu/open_menu"},
+        },
+    },
+    
+    fade_leap_local =
+    {
+        blinkOutEffects =
+        {        
+            {viewmodel_cinematic = "cinematics/alien/fade/blink_in.cinematic", attach_point = ""},
+            {viewmodel_animation = "swipe_blink", classname = "SwipeBlink"},
+            {viewmodel_animation = "stab_blink", classname = "StabBlink"},
+            
         },
     },
     

@@ -29,14 +29,18 @@ kMarineRepairHealthPerSecond = 150
 // The base weapons need to cost a small amount otherwise they can
 // be spammed.
 kRifleCost = 0
+kExtendedRifleCost = 10
 kPistolCost = 0
 kAxeCost = 0
 // % use per second
-kJetpackUseFuelRate = .2
-// % gain every second whether in use or not
-kJetpackReplenishFuelRate = .15
+kJetpackUseFuelRate = 0.1
+kJetpackReduceUseFuelRate = 0.02
+kJetpackUpgradeAcceleration = 8
+// % gain every second when not in use
+kJetpackReplenishFuelRate = .25
 kInitialDrifters = 3
 kSkulkCost = 0
+kEggCost = 5
 kBuildHydraDelay = .5
 kLerkWeaponSwitchTime = .5
 kMACSpeedAmount = .5
@@ -53,7 +57,8 @@ kSentryEngagementDistance = 2
 kPlayerEngagementDistance = 1
 kHeavyEngagementDistance = 1.5
 kOnosEngagementDistance = 2
-kLerkSporeShootRange = 10
+kLerkSporeShootRange = 9
+kLerkUmbraShootRange = 1.5
 
 // Marine buy costs
 kFlamethrowerAltCost = 5
@@ -73,10 +78,14 @@ kEnergizeEnergyIncrease = .2
 // Rate of fire increase per level
 kFuryROFIncrease = .15
 
-kSprayDouseOnFireChance = .5
+kSprayDouseOnFireChance = .2
 
 // Players and structures get energy back at this rate when on fire 
 kOnFireEnergyRecuperationScalar = .1
+// multiply the energy cost when on fire
+kOnFireEnergyCostScalar = 1.7
+// reduce the energy cost when affected primal scream
+kOnPrimalScreamEnergyCostScalar = .3
 
 // Infestation
 kStructureInfestationRadius = 2

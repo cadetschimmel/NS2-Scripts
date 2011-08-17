@@ -41,11 +41,7 @@ function SwipeBlink:OnInit()
 end
 
 function SwipeBlink:GetEnergyCost(player)
-    return SwipeBlink.kSwipeEnergyCost
-end
-
-function SwipeBlink:GetHasSecondary(player)
-    return true
+    return self:ApplyEnergyCostModifier(SwipeBlink.kSwipeEnergyCost, player)
 end
 
 function SwipeBlink:GetPrimaryAttackDelay()

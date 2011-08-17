@@ -76,6 +76,10 @@ function Rifle:OnDestroy()
 
 end
 
+function Rifle:GetHasSecondary(player)
+	return true
+end
+
 function Rifle:GetViewModelName()
     return Rifle.kViewModelName
 end
@@ -373,7 +377,7 @@ end
 
 // Perform melee attack with rifle butt
 function Rifle:OnSecondaryAttack(player)
-
+	
     if ( player:GetCanNewActivityStart() ) then
     
         // Play view model effect
@@ -405,7 +409,7 @@ end
 function Rifle:ApplyMeleeHitEffects(player, damage, target, endPoint, direction)
 
     // Apply damage
-    if target and target:isa("LiveScriptActor") then
+    if target and target:isa("LiveScriptActor") and GetGamerules():CanEntityDoDamageTo(player, target) then
     
         target:TakeDamage(damage, player, self, endPoint, direction)
         

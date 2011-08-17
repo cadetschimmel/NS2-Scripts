@@ -30,7 +30,7 @@ Egg.kZExtents = 1
 Egg.kHealth = kEggHealth
 Egg.kArmor = kEggArmor
 
-Egg.kThinkInterval = .5
+Egg.kThinkInterval = 1 // .5
 
 function Egg:OnCreate()
     Structure.OnCreate(self)
@@ -68,6 +68,10 @@ end
 
 function Egg:GetIsAlienStructure()
     return true
+end
+
+function Egg:GetDamagedAlertId()
+	return false
 end
 
 function Egg:QueueWaitingPlayer()
@@ -138,6 +142,10 @@ function Egg:OnKill(damage, attacker, doer, point, direction)
     
 end
 
+// override
+function Egg:EvolvePlayer(player)
+end
+
 // Grab player out of respawn queue unless player passed in (for test framework)
 function Egg:SpawnPlayer(player)
 
@@ -159,10 +167,12 @@ function Egg:SpawnPlayer(player)
             
             self:TriggerEffects("egg_death")
             
+            self:EvolvePlayer(player)
+            
             DestroyEntity(self) 
             
             return true, player
-            
+
         end
             
     end

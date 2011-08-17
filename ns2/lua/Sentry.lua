@@ -6,6 +6,7 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Structure.lua")
+Script.Load("lua/SentryAmmo.lua")
 
 class 'Sentry' (Structure)
 
@@ -56,9 +57,11 @@ Sentry.kRange = 20
 Sentry.kReorientSpeed = .05
 // Don't choose new target right away, to make sure multiple attacks can overwhelm sentry
 Sentry.kTargetReacquireTime = .5
-Sentry.kInitialAmmo = 250
-Sentry.kMaxAmmo = 250
-Sentry.kAmmoPerRefill = 250
+Sentry.kMaxAmmo = kSentryMaxAmmo
+Sentry.kInitialAmmo = Sentry.kMaxAmmo
+Sentry.kAmmoPerRefill = Sentry.kMaxAmmo
+Sentry.kMaxReserve = 1
+Sentry.kInitialReserve = 0
 
 // Animations
 Sentry.kDeathAnimTable = {/*{1.0, "death"},*/ {1.0, "death2"}}
@@ -88,7 +91,8 @@ local networkVars = {
     // For debugging
     //relativeTargetDirection     = "vector",    
    
-    ammo                        = string.format("integer (0 to %d", Sentry.kMaxAmmo)
+    ammo                        = string.format("integer (0 to %d", Sentry.kMaxAmmo),
+    reserve                     = string.format("integer (0 to %d", Sentry.kMaxReserve)
     
 }
 
@@ -117,6 +121,7 @@ function Sentry:OnCreate()
     
     // Ammo and max ammo
     self.ammo = Sentry.kInitialAmmo
+    self.reserve = Sentry.kInitialReserve
     
 end
 
@@ -143,12 +148,13 @@ function Sentry:OnInit()
     
     if Server then 
         // configure how targets are selected and validated
-        self.targetSelector = TargetSelector():Init(
+        self.targetSelector = Server.targetCache:CreateSelector(
             self,
             Sentry.kRange, 
             true,
-            { kMarineStaticTargets, kMarineMobileTargets },
-            { PitchTargetFilter(self,  -Sentry.kMaxPitch, Sentry.kMaxPitch), CloakTargetFilter() })
+            TargetCache.kMmtl, 
+            TargetCache.kMstl, 
+            { PitchTargetFilter(self,  -Sentry.kMaxPitch, Sentry.kMaxPitch), CloakCamoTargetFilter() })
     end
 end
 
@@ -168,7 +174,7 @@ end
 function Sentry:GetStatusDescription()
     local text, scalar = Structure.GetStatusDescription(self)
     if text == nil then
-        text = string.format("%d / %d rounds", self.ammo, Sentry.kMaxAmmo)
+        text = string.format("%d / %d + %d / %d ", self.ammo, Sentry.kMaxAmmo, self.reserve, Sentry.kMaxReserve)
         scalar = self.ammo / Sentry.kMaxAmmo
     end
     return text, scalar
@@ -213,7 +219,7 @@ function Sentry:GetTechButtons(techId)
 
         return { 
             kTechId.Attack, kTechId.Stop, kTechId.SetTarget, kTechId.None,
-            kTechId.SentryRefill, kTechId.None, kTechId.None, kTechId.None 
+            kTechId.None, kTechId.None, kTechId.None, kTechId.None 
             }
     end
     
@@ -221,14 +227,19 @@ function Sentry:GetTechButtons(techId)
     
 end
 
-function Sentry:GetTechAllowed(techId, techNode, player)
-    if techId == kTechId.SentryRefill then
-        return self.ammo < Sentry.kMaxAmmo
-    // Don't allow sentry refilling to be cancelled (add this later if it stays, but Structure:AbortResearch() assumes team resources refund)
-    elseif techId == kTechId.Cancel then
-        return false
-    end
-    return Structure.GetTechAllowed(self, techId, techNode, player)
+function Sentry:AddReserve()
+	local success = false
+	
+	if self.reserve < Sentry.kMaxReserve then
+	
+		Shared.PlaySound(self, SentryAmmo.kRefillSound)
+		Shared.CreateEffect(nil, SentryAmmo.kPackDropEffect, self)
+		self.reserve = self.reserve + 1
+		success = true
+	
+	end
+	
+	return success
 end
 
 function Sentry:UpdateAngles(deltaTime)
@@ -323,6 +334,23 @@ function Sentry:OnUpdate(deltaTime)
         end
         */
         
+    else
+    	// out of ammo but has reserve, switch to "unbuilt": requires manual "reload"
+    	if self:GetIsBuilt() and (self.reserve > 0)  and (self:GetAmmo() == 0) then 
+    		
+    		if Server then
+	    		self.reserve = self.reserve - 1
+	    		self.ammo = Sentry.kAmmoPerRefill
+	    		
+	    		self.buildFraction = 0.999
+	    		self.buildTime = kSentryBuildTime * .999
+	    		self.constructionComplete = false
+	    		
+	    		// "open" the sentry, indicating it requires manual reload
+		        self:SetMode(Sentry.kMode.PoweringDown)
+	    	end
+	    	
+	    end
     end
     
     self:UpdatePoseParameters(deltaTime)

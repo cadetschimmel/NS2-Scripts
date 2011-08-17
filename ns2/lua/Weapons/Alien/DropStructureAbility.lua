@@ -3,78 +3,111 @@
 // lua\Weapons\Alien\DropStructureAbility.lua
 //
 //    Created by:   Charlie Cleveland (charlie@unknownworlds.com)
+//					Andreas Urwalek (a_urwa@sbox.tugraz.at)
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
+
 Script.Load("lua/Weapons/Alien/Ability.lua")
+Script.Load("lua/Weapons/Alien/CystAbility.lua")
+Script.Load("lua/Weapons/Alien/HydraAbility.lua")
+Script.Load("lua/Weapons/Alien/MiniCragAbility.lua")
+Script.Load("lua/Weapons/Alien/MiniShadeAbility.lua")
+Script.Load("lua/Weapons/Alien/MiniShiftAbility.lua")
 
 class 'DropStructureAbility' (Ability)
 
-DropStructureAbility.kMapName = "drop_structure_ability"
-
+DropStructureAbility.kMapName = "dropstructureability"
 DropStructureAbility.kCircleModelName = PrecacheAsset("models/misc/circle/circle_alien.model")
-
-DropStructureAbility.kPlacementDistance = 1.1
-
-DropStructureAbility.networkVars = 
+DropStructureAbility.kPlacementDistance = 6.0
+DropStructureAbility.kIterateStructureDelay = .3
+DropStructureAbility.kDropStructureDelay = .5
+DropStructureAbility.kSupportedStructures = { CystStructureAbility, HydraStructureAbility, MiniCragStructureAbility, MiniShadeStructureAbility, MiniShiftStructureAbility }
+DropStructureAbility.networkVars =
 {
     // When true, show ghost (on deploy and after attacking)
+    activeStructure			= string.format("integer (1 to %d)", table.count(DropStructureAbility.kSupportedStructures)),
     showGhost               = "boolean",
     healthSprayPoseParam    = "compensated float",
     chamberPoseParam        = "compensated float"
 }
+
+function DropStructureAbility:IterateStructure(player)
+
+	for index, structureAbility in pairs(DropStructureAbility.kSupportedStructures) do
+	
+		if self.activeStructure == table.count(DropStructureAbility.kSupportedStructures) then
+			self.activeStructure = 1
+			break
+		else
+			self.activeStructure = self.activeStructure + 1
+			if DropStructureAbility.kSupportedStructures[self.activeStructure]:IsAllowed() then
+				break
+			end
+		end
+	
+	end
+
+end
+
+function DropStructureAbility:GetSecondaryEnergyCost(player)
+    return 0
+end
+
+function DropStructureAbility:GetActiveStructure()
+	return DropStructureAbility.kSupportedStructures[self.activeStructure]
+end
+
+// Iterate through structures
+function DropStructureAbility:PerformSecondaryAttack(player)
+
+    if(player:GetCanNewActivityStart()) then
+    
+        self:IterateStructure(player)
+                
+        player:SetActivityEnd(player:AdjustFuryFireDelay(DropStructureAbility.kIterateStructureDelay))
+        
+        return true
+        
+    end
+    
+    return false
+    
+end
+
+function DropStructureAbility:GetHasSecondary(player)
+	return true
+end
 
 function DropStructureAbility:OnInit()
     Ability.OnInit(self)
     self.showGhost = false
     self.healthSprayPoseParam = 0
     self.chamberPoseParam = 0
+    self.activeStructure = 1
 end
 
 function DropStructureAbility:OnDraw(player, prevWeapon)
 
     Ability.OnDraw(self, player, prevWeapon)
     self.showGhost = true
+    self.activeStructure = 1
     
 end
 
-// Child should override
 function DropStructureAbility:GetEnergyCost(player)
-    ASSERT(false)
+    return self:GetActiveStructure().GetEnergyCost(player)
 end
 
-// Child should override
-function DropStructureAbility:GetPrimaryAttackDelay()
-    ASSERT(false)
-end
-
-// Child should override
 function DropStructureAbility:GetIconOffsetY(secondary)
-    ASSERT(false)
+	if self.activeStructure ~= 1 then 
+	return kAbilityOffset.Hydra
+	else
+    return kAbilityOffset.Infestation
+    end
 end
 
-// Child should override
-function DropStructureAbility:GetDropStructureId()
-    ASSERT(false)
-end
-
-// Child should override ("hydra", "cyst", etc.). 
-function DropStructureAbility:GetSuffixName()
-    ASSERT(false)
-end
-
-// Child should override ("Hydra")
-function DropStructureAbility:GetDropClassName()
-    ASSERT(false)
-end
-
-// Child should override 
-function DropStructureAbility:GetDropMapName()
-    ASSERT(false)
-end
-
-// Child should override 
 function DropStructureAbility:GetHUDSlot()
-    ASSERT(false)
+    return 4
 end
 
 // Check before energy is spent if a Hydra can be built in the current location.
@@ -84,16 +117,22 @@ function DropStructureAbility:OnPrimaryAttack(player)
     local coords, valid = self:GetPositionForStructure(player)
     if valid then
         // Ensure they have enough resources.
-        local cost = GetCostForTech(self:GetDropStructureId())
+        local cost = GetCostForTech(self:GetActiveStructure().GetDropStructureId())
         if player:GetResources() >= cost then
             Ability.OnPrimaryAttack(self, player)
         else
-            player:AddTooltip(string.format("Not enough resources to create %s.", self:GetDropClassName()))
+            player:AddTooltip(string.format("Not enough resources to create %s.", self:GetActiveStructure().GetDropClassName()))
         end
     else
-        player:AddTooltip(string.format("Could not place %s in that location.", self:GetDropClassName()))
+        player:AddTooltip(string.format("Could not place %s in that location.", self:GetActiveStructure().GetDropClassName()))
     end
     
+end
+
+function DropStructureAbility:GetPrimaryAttackDelay()
+
+	return DropStructureAbility.kDropStructureDelay
+	
 end
 
 // Create structure
@@ -101,8 +140,6 @@ function DropStructureAbility:PerformPrimaryAttack(player)
     local success = true
     // Make ghost disappear
     if self.showGhost then
-    
-        player:TriggerEffects("start_create_" .. self:GetSuffixName())
     
         player:SetAnimAndMode(Gorge.kCreateStructure, kPlayerMode.GorgeStructure)
             
@@ -118,10 +155,12 @@ function DropStructureAbility:DropStructure(player)
 
     // If we have enough resources
     if Server then
-    
+        
+        local cost = LookupTechData(self:GetActiveStructure().GetDropStructureId(), kTechDataCostKey)
+
         local coords, valid = self:GetPositionForStructure(player)
     
-        local cost = LookupTechData(self:GetDropStructureId(), kTechDataCostKey)
+        local cost = LookupTechData(self:GetActiveStructure().GetDropStructureId(), kTechDataCostKey)
         if valid and (player:GetResources() >= cost) then
         
             // Create structure
@@ -137,29 +176,33 @@ function DropStructureAbility:DropStructure(player)
                     angles:BuildFromCoords(coords)
                     structure:SetAngles(angles)
                     
-                    player:TriggerEffects("create_" .. self:GetSuffixName())
+                    //player:TriggerEffects("create_" .. self:GetActiveStructure().GetSuffixName())
+
+    				self:TriggerEffects("gorge_create")
                     
                     player:AddResources( -cost )
                     
                     player:SetActivityEnd(.5)
                     
+                    
+                    
                     // Jackpot
                     return true                    
                 else
                     
-                    player:AddTooltip(string.format("Not enough space for %s in that location.", self:GetDropClassName()))
+                    player:AddTooltip(string.format("Not enough space for %s in that location.", self:GetActiveStructure().GetDropClassName()))
                     DestroyEntity(structure)            
                 end
 
             else
-                player:AddTooltip(string.format("Create %s failed.", self:GetDropClassName()))                
+                player:AddTooltip(string.format("Create %s failed.", self:GetActiveStructure().GetDropClassName()))                
             end            
             
         else        
             if not valid then
-                player:AddTooltip(string.format("Could not place %s in that location.", self:GetDropClassName()))
+                player:AddTooltip(string.format("Could not place %s in that location.", self:GetActiveStructure().GetDropClassName()))
             else
-                player:AddTooltip(string.format("Not enough resources to create %s.", self:GetDropClassName()))
+                player:AddTooltip(string.format("Not enough resources to create %s.", self:GetActiveStructure().GetDropClassName()))
             end                        
         end
         
@@ -170,7 +213,12 @@ function DropStructureAbility:DropStructure(player)
 end
 
 function DropStructureAbility:CreateStructure(coords, player)
-    return CreateEntity( self:GetDropMapName(), coords.origin, player:GetTeamNumber() )
+	local created_structure = self:GetActiveStructure():CreateStructure(coords, player)
+	if created_structure then 
+		return created_structure
+	else
+    	return CreateEntity( self:GetActiveStructure().GetDropMapName(), coords.origin, player:GetTeamNumber() )
+    end
 end
 
 // Given a gorge player's position and view angles, return a position and orientation
@@ -200,7 +248,7 @@ function DropStructureAbility:GetPositionForStructure(player)
     
         if trace.entity == nil then
             validPosition = true
-        elseif trace.entity:isa("Infestation") or (not trace.entity:isa("LiveScriptActor") and not trace.entity:isa(self:GetDropClassName())) then
+        elseif trace.entity:isa("Infestation") or (not trace.entity:isa("LiveScriptActor") and not trace.entity:isa(self:GetActiveStructure().GetDropClassName())) then
             validPosition = true
         end
         
@@ -209,7 +257,7 @@ function DropStructureAbility:GetPositionForStructure(player)
     end
     
     // Can only be built on infestation
-    local requiresInfestation = LookupTechData(self:GetDropStructureId(), kTechDataRequiresInfestation)
+    local requiresInfestation = LookupTechData(self:GetActiveStructure().GetDropStructureId(), kTechDataRequiresInfestation)
     if requiresInfestation and not GetIsPointOnInfestation(displayOrigin) then
         validPosition = false
     end
@@ -222,10 +270,6 @@ function DropStructureAbility:GetPositionForStructure(player)
 
 end
 
-function DropStructureAbility:GetGhostModelName()
-    return LookupTechData(self:GetDropStructureId(), kTechDataModel)
-end
-
 if Client then
 function DropStructureAbility:OnUpdate(deltaTime)
 
@@ -234,6 +278,10 @@ function DropStructureAbility:OnUpdate(deltaTime)
     if not Shared.GetIsRunningPrediction() then
 
         local player = self:GetParent()
+        
+        if not self:GetActiveStructure():IsAllowed() then
+        	self:IterateStructure()
+    	end
         
         if player == Client.GetLocalPlayer() and player:GetActiveWeapon() == self then
         
@@ -254,7 +302,7 @@ function DropStructureAbility:OnUpdate(deltaTime)
 
             // Update ghost model every frame in case it changes
             if self.ghostStructure then
-                local modelName = self:GetGhostModelName()
+                local modelName = self:GetActiveStructure():GetGhostModelName(self)
                 self.ghostStructure:SetModel( Shared.GetModelIndex(modelName) )
             end
             
@@ -274,7 +322,7 @@ function DropStructureAbility:OnUpdate(deltaTime)
                 self.ghostStructure:SetIsVisible(valid)
                 
                 // Check resources
-                if player:GetResources() < LookupTechData(self:GetDropStructureId(), kTechDataCostKey) then
+                if player:GetResources() < LookupTechData(self:GetActiveStructure():GetDropStructureId(), kTechDataCostKey) then
                 
                     valid = false
                     

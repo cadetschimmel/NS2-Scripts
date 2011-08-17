@@ -11,26 +11,29 @@ Script.Load("lua/BalanceHealth.lua")
 Script.Load("lua/BalanceMisc.lua")
 
 // MARINE COSTS
-kCommandStationCost = 20
+kCommandStationCost = 40
 
-kExtractorCost = 10
+kExtractorCost = 15
 kResourceUpgradeResearchCost = 5
+
+kPowerPackElectrifyCost = 10
+kPowerPackElectrifyTime = 10
 
 kInfantryPortalCost = 10
 
-kArmoryCost = 10
+kArmoryCost = 15
 kAmmoPackCost = 1
 kMedPackCost = 1
-kArmsLabCost = 20
+kArmsLabCost = 15
 
 kAdvancedArmoryUpgradeCost = 30
 
 kWeaponsModuleAddonCost = 20
 kPrototypeLabCost = 40
 
-kSentryCost = 10
+kSentryCost = 15
 kSentryTechCost = 5
-kSentryRefillCost = 2
+kSentryAmmoCost = 30 // energy
 kPowerPackCost = 15
 
 kMACCost = 5
@@ -43,21 +46,21 @@ kShotgunCost = 20
 kShotgunTechResearchCost = 15
 
 kGrenadeLauncherCost = 20
-kGrenadeLauncherTechResearchCost = 15
+kGrenadeLauncherTechResearchCost = 15 // original: 15, to make 20 as a baseline cost for weapon upgrades
 kNerveGasTechResearchCost = 15
 
-kFlamethrowerCost = 30
-kFlamethrowerTechResearchCost = 20
+kFlamethrowerCost = 25
+kFlamethrowerTechResearchCost = 15
 
-kRoboticsFactoryCost = 20
+kRoboticsFactoryCost = 15
 kARCCost = 20
 kARCSplashTechResearchCost = 15
 kARCArmorTechResearchCost = 15
 
 kJetpackCost = 25
-kJetpackTechResearchCost = 35
+kJetpackTechResearchCost = 25
 kJetpackFuelTechResearchCost = 15
-kJetpackArmorTechResearchCost = 15
+kJetpackArmorTechResearchCost = 10
 
 kExoskeletonCost = 15
 kExoskeletonTechResearchCost = 20
@@ -68,42 +71,45 @@ kMinigunCost = 30
 kDualMinigunCost = 25
 kDualMinigunTechResearchCost = 20
 
-kWeapons1ResearchCost = 15
-kWeapons2ResearchCost = 25
-kWeapons3ResearchCost = 35
-kArmor1ResearchCost = 15
-kArmor2ResearchCost = 25
-kArmor3ResearchCost = 35
+kWeapons1ResearchCost = 10
+kWeapons2ResearchCost = 20
+kWeapons3ResearchCost = 40
+kArmor1ResearchCost = 10
+kArmor2ResearchCost = 20
+kArmor3ResearchCost = 40
 
-kCatPackCost = 2
+kCatPackCost = 3
 kCatPackTechResearchCost = 10
 
-kRifleUpgradeTechResearchCost = 10
+kExtendedRifleTechResearchCost = 10
 
-kObservatoryCost = 10
+kObservatoryCost = 15
 kPhaseGateCost = 15
-kPhaseTechResearchCost = 15
+kPhaseTechResearchCost = 10
 
-
-
-kHiveCost = 50
+kHiveCost = 40
 
 kMetabolizeTechCost = 10
 
-kHarvesterCost = 10
+kHarvesterCost = 15
 
 kDrifterFlareTechResearchCost = 10
 
+kMorpherCost = 15
+
+kMiniCragCost = 5 // personal res
 kCragCost = 10
 kMatureCragCost = 10
 
+kMiniShiftCost = 5 // personal res
 kShiftCost = 10
 kMatureShiftCost = 10
 
+kMiniShadeCost = 5 // personal res
 kShadeCost = 10
 kMatureShadeCost = 10
 
-kWhipCost = 10
+kWhipCost = 15
 kMatureWhipCost = 10
 
 kGorgeCost = 10
@@ -117,7 +123,9 @@ kMiniCystCost = 3
 kFrenzyResearchCost = 10
 kSwarmResearchCost = 10
 kCamouflageResearchCost = 10
+
 kLeapResearchCost = 10
+kBlinkResearchCost = 10
 
 kCarapaceResearchCost = 10
 kRegenerationResearchCost = 10
@@ -140,7 +148,7 @@ kLeapCost = 2
 kFrenzyCost = 2
 kSwarmCost = 2
 kCamouflageCost = 2
-kHydraAbilityCost = 2
+kDropStructureAbilityCost = 2
 kBileBombCost = 2
 kPiercingCost = 2
 kAdrenalineCost = 2
@@ -149,27 +157,31 @@ kSapCost = 2
 kStompCost = 2
 kBoneShieldCost = 2
 
-kMelee1ResearchCost = 15
-kMelee2ResearchCost = 25
-kMelee3ResearchCost = 35
-kAlienArmor1ResearchCost = 15
-kAlienArmor2ResearchCost = 25
-kAlienArmor3ResearchCost = 35
+kMelee1ResearchCost = 10
+kMelee2ResearchCost = 20
+kMelee3ResearchCost = 40
+kAlienArmor1ResearchCost = 10
+kAlienArmor2ResearchCost = 20
+kAlienArmor3ResearchCost = 40
 
 
 kPlayingTeamInitialTeamRes = 50
 
 kPlayerInitialIndivRes = 25
 
-kResourceTowerResourceInterval = 8
+kResourceTowerResourceInterval = 7
 
-kPlayerResPerInterval = 0.25
+kPlayerResPerInterval = 0.18 // original 0.25, changed because of tech point multiplier and smaller interval
 
 kKillRewardMin = 1
 kKillRewardMax = 3
-kKillTeamReward = 0
+kKillReward = 1
+
+kKillTeamReward = 1
 
 kCommanderTax = 0.4
+
+
 
 
 
@@ -200,50 +212,60 @@ kRifleDamage = 10
 kRifleDamageType = kDamageType.Normal
 kRifleFireDelay = 0.0555
 kRifleClipSize = 50
+kExtendedRifleClipSize = 70
 
-kRifleMeleeDamage = 35
+kRifleMeleeDamage = 20
 kRifleMeleeDamageType = kDamageType.Normal
 kRifleMeleeFireDelay = 0.7
 
 
-kPistolDamage = 20
-kPistolDamageType = kDamageType.Heavy
+kPistolDamage = 25
+kPistolDamageType = kDamageType.Light
 kPistolFireDelay = 0.1
 kPistolClipSize = 10
 
-kPistolAltDamage = 30
-kPistolAltFireDelay = 0.2
+kPistolAltDamage = 40
+kPistolAltFireDelay = 0.25
 
 
 
-kAxeDamage = 30
+kAxeDamage = 40
 kAxeDamageType = kDamageType.Structural
-kAxeFireDelay = 0.6
+kAxeFireDelay = 0.8
 
 
-kGrenadeLauncherGrenadeDamage = 150
+kGrenadeLauncherGrenadeDamage = 140
 kGrenadeLauncherGrenadeDamageType = kDamageType.Structural
 kGrenadeLauncherFireDelay = 0.4
 kGrenadeLauncherClipSize = 4
 kGrenadeLauncherGrenadeDamageRadius = 8
-kGrenadeLifetime = 1.5
+kGrenadeLifetime = 1.5  // original 3
 
-kShotgunMaxDamage = 18
-kShotgunMinDamage = 1
+kShotgunMaxDamage = 16.5 // original 20 in build 180, 18 in build 181
+kShotgunMinDamage = 6
 kShotgunDamageType = kDamageType.Normal
 kShotgunFireDelay = 0.9
 kShotgunClipSize = 8
 kShotgunBulletsPerShot = 10
-kShotgunMinDamageRange = 15
-kShotgunMaxDamageRange = 2
-kShotgunSpreadDegrees = 20
+kShotgunMinDamageRange = 14
+kShotgunMaxDamageRange = 4.5
+kShotgunSpreadDegrees = 10 // original 20, decreased because i want to stack it up 4 times
 
-kFlamethrowerDamage = 20
+kFlechetteDamageScalar = 1.35 // 35% more damage
+kFlechettesPerShot = 15
+kFlechetteDamage = 2 // per flechette
+kFlechetteSpreadRange = 20
+kFlechetteAmmo = 6
+
+kFlamethrowerDamage = 0.2 // original 20, decreased because of stacks
 kFlamethrowerDamageType = kDamageType.Flame
-kFlamethrowerFireDelay = 0.5
-kFlamethrowerClipSize = 15
-
-kBurnDamagePerSecond = 8
+kFlamethrowerFireDelay = 0.15
+kFlamethrowerClipSize = 70
+kFlamethrowerMaxStacks = 90
+kFlamethrowerBurnDuration = 5 // seconds
+kFlamethrowerStackRate = 0.2 // time for increasing stack
+kBurnDamagePerSecond = 2.0 // original: 8, decreased because of stacks
+kFlameRadius = 1.8
 
 kMinigunDamage = 25
 kMinigunDamageType = kDamageType.Normal
@@ -255,11 +277,12 @@ kMACAttackDamageType = kDamageType.Normal
 kMACAttackFireDelay = 0.6
 
 
-kSentryAttackDamage = 10
+kSentryAttackDamage = 13
 kSentryAttackDamageType = kDamageType.Light
-kSentryAttackBaseROF = 0.08
+kSentryAttackBaseROF = 0.20 // original 8
 kSentryAttackRandROF = 0.04
 kSentryAttackBulletsPerSalvo = 1
+kSentryMaxAmmo = 110 // originally 250, we need less bullets since rof is lower
 
 kARCDamage = 400
 kARCDamageType = kDamageType.StructuresOnly
@@ -292,7 +315,7 @@ kWeapons3DamageScalar = 1.3
 kBiteDamage = 75
 kBiteDamageType = kDamageType.Normal
 kBiteFireDelay = 0.45
-kBiteEnergyCost = 3
+kBiteEnergyCost = 5.5
 
 kLeapEnergyCost = 40
 
@@ -311,38 +334,53 @@ kHealsprayDamageType = kDamageType.Light
 kHealsprayFireDelay = 0.8
 kHealsprayEnergyCost = 15
 
-kBileBombDamage = 200
+kBileBombDamage = 320
 kBileBombDamageType = kDamageType.StructuresOnly
 kBileBombFireDelay = 1
-kBileBombEnergyCost = 15
+kBileBombEnergyCost = 26
 
-kSpikeMaxDamage = 30
-kSpikeMinDamage = 8
+kSpikesMaxZoomFaktor = 3 // = 3 seconds to achieve max zoom damage modifier
+kSpikeMaxDamage = 15 // original: 30
+kSpikeMinDamage = 3
+kSpikeMaxRange = 1
+kSpikeMinRange = 8
 kSpikeDamageType = kDamageType.Light
 kSpikeFireDelay = 0.1
-kSpikeEnergyCost = 1.5
+kSpikeEnergyCost = 1.35
 kPiercingDamageScalar = 1.4
 
-kSpikesAltDamage = 90
+kSpikesAltDamage = 106 // 2 sniper shots + 1 parasite will kill a marine
 kSpikesAltDamageType = kDamageType.Normal
 kSpikesAltFireDelay = 1
-kSpikesAltEnergyCost = 30
+kSpikesAltEnergyCost = 38 // 3 sniper shots in a row
 
-kSporesDamagePerSecond = 7
-kSporesDamageType = kDamageType.Gas
-kSporesFireDelay = 0.8
+kSporesDamagePerSecond = 8
+kSporesDamageType = kDamageType.Normal
+kSporesFireDelay = 0.7
 kSporesEnergyCost = 20
+kSporeMineEnergyCost = 45
+kSporeMineFireDelay = 1.2
+kSporeMineTriggerRange = 2.7
+kSporeMineLivingTime = 30
 
-kSwipeDamage = 70
+kUmbraEnergyCost = 35
+kUmbraFireDelay = 0.8
+
+kSwipeDamage = 85
 kSwipeDamageType = kDamageType.Puncture
-kSwipeFireDelay = 0.65
-kSwipeEnergyCost = 7
+kSwipeFireDelay = 0.75
+kSwipeEnergyCost = 10
 
 kStabDamage = 160
 kStabDamageType = kDamageType.Puncture
-kStabFireDelay = 1.5
-kStabEnergyCost = 20
-kBlinkEnergyCost = 45
+kStabFireDelay = 1.9
+kStabEnergyCost = 30
+
+kBlinkEnergyCost = 18
+kBlinkInitialEnergyCost = 23
+
+kFetchEnergyCost = 24
+kFetchInitialEnergyCost = 16
 
 kGoreDamage = 90
 kGoreDamageType = kDamageType.Normal
@@ -375,6 +413,8 @@ kMelee3DamageScalar = 1.3
 
 
 
+
+
 // SPAWN TIMES
 kMarineRespawnTime = 10
 kAlienRespawnTime = 13
@@ -398,8 +438,8 @@ kInfantryPortalTransponderTechResearchCost = 10
 kInfantryPortalTransponderUpgradeTime = 30
 kInfantryPortalTransponderUpgradeCost = 10
 
-kRifleUpgradeTechResearchTime = 20
-kShotgunTechResearchTime = 40
+kExtendedRifleTechResearchTime = 20
+kShotgunTechResearchTime = 25
 kDualMinigunTechResearchTime = 20
 kGrenadeLauncherTechResearchTime = 20
 
@@ -420,8 +460,8 @@ kTechMinesResearchTime = 20
 kTechEMPResearchTime = 20
 kTechMACSpeedResearchTime = 15
 
-kJetpackTechResearchTime = 90
-kJetpackFuelTechResearchTime = 60
+kJetpackTechResearchTime = 60
+kJetpackFuelTechResearchTime = 90
 kJetpackArmorTechResearchTime = 60
 kExoskeletonTechResearchTime = 90
 kExoskeletonLockdownTechResearchTime = 60
@@ -455,27 +495,35 @@ kHarvesterBuildTime = 20
 
 kDrifterFlareTechResearchTime = 25
 
+kMorpherBuildTime = 20
+
+kMiniCragBuildTime = 10
+kUpgradeMiniCragResearchTime = 10
 kCragBuildTime = 20
-kMatureCragResearchTime = 30
+kMatureCragResearchTime = 10
 
 kWhipBuildTime = 20
-kMatureWhipResearchTime = 30
+kMatureWhipResearchTime = 10
 
+kUpgradeMiniShiftResearchTime = 10
+kMiniShiftBuildTime = 10
 kShiftBuildTime = 20
-kMatureShiftResearchTime = 30
+kMatureShiftResearchTime = 10
 
+kUpgradeMiniShadeResearchTime = 10
+kMiniShadeBuildTime = 10
 kShadeBuildTime = 20
-kMatureShadeResearchTime = 30
+kMatureShadeResearchTime = 10
 
 kHydraBuildTime = 12
 kCystBuildTime = 1
 kMiniCystBuildTime = 1
 
 kSkulkGestateTime = 3
-kGorgeGestateTime = 10
-kLerkGestateTime = 15
-kFadeGestateTime = 25
-kOnosGestateTime = 35
+kGorgeGestateTime = 6
+kLerkGestateTime = 9
+kFadeGestateTime = 12
+kOnosGestateTime = 15
 
 kEvolutionGestateTime = 3
 kMetabolizeTechResearchTime = 15
@@ -486,6 +534,7 @@ kFuryTime = 6
 kFrenzyResearchTime = 25
 kSwarmResearchTime = 25
 kLeapResearchTime = 20
+kBlinkResearchTime = 20
 kCarapaceResearchTime = 20
 kRegenerationResearchTime = 20
 kCamouflageResearchTime = 20
@@ -501,6 +550,14 @@ kSapResearchTime = 15
 
 kBoneShieldResearchTime = 20
 kStompResearchTime = 20
+
+kLerkResearchTime = 25
+kFadeResearchTime = 30
+kOnosResearchTime = 40
+
+kLerkResearchCost = 20
+kFadeResearchCost = 30
+kOnosResearchCost = 40
 
 kMelee1ResearchTime = 20
 kMelee2ResearchTime = 30
@@ -531,16 +588,17 @@ kAlienArmor3ResearchTime = 40
 kCommandStationInitialEnergy = 50  kCommandStationMaxEnergy = 200
 kCommandCenterNanoGridCost = 50  
 
-kHiveInitialEnergy = 100  kHiveMaxEnergy = 200
-kCystCost = 20  
+kHiveInitialEnergy = 80  kHiveMaxEnergy = 100
+kCystCost = 20
 kMetabolizeCost = 25  
 
 kObservatoryInitialEnergy = 25  kObservatoryMaxEnergy = 100
 kObservatoryScanCost = 20  
-kObservatoryDistressBeaconCost = 50
+kObservatoryDistressBeaconCost = 50  
 
-kDrifterCost = 30  
+kDrifterCost = 15  
 
+kMiniCragInitialEnergy = 5	kMiniCragMaxEnergy = 25
 kCragInitialEnergy = 25  kCragMaxEnergy = 100
 kCragHealCost = 0  
 kCragUmbraCost = 30  
@@ -550,13 +608,16 @@ kMatureCragMaxEnergy = 150
 kWhipInitialEnergy = 25  kWhipMaxEnergy = 100
 kWhipFuryInitialEnergy = 50  kWhipFuryCost = 50  
 kWhipBombardInitialEnergy = 25  
+kWhipBombardCost = 15
 kMatureWhipMaxEnergy = 150
 
+kMiniShiftInitialEnergy = 5	kMiniShiftMaxEnergy = 25
 kShiftInitialEnergy = 25  kShiftMaxEnergy = 100
 kShiftEchoCost = 75  
-kShiftEnergizeCost = 25  
+kShiftEnergizeCost = 0 
 kMatureShiftMaxEnergy = 150
 
+kMiniShadeInitialEnergy = 5	kMiniShadeMaxEnergy = 25
 kShadeInitialEnergy = 25  kShadeMaxEnergy = 100
 kShadeCloakCost = 25  
 kShadePhantasmFadeCost = 25  

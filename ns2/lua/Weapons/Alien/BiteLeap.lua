@@ -9,8 +9,9 @@
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Alien/Ability.lua")
+Script.Load("lua/Weapons/Alien/Leap.lua")
 
-class 'BiteLeap' (Ability)
+class 'BiteLeap' (Leap)
 
 BiteLeap.kMapName = "bite"
 
@@ -35,20 +36,11 @@ function BiteLeap:OnInit()
 end
 
 function BiteLeap:GetEnergyCost(player)
-    return kBiteEnergyCost
-end
-
-// All two hive skulks have leap - but it goes away as soon as the second hive does
-function BiteLeap:GetHasSecondary(player)
-    return player.GetHasTwoHives and player:GetHasTwoHives()
+    return self:ApplyEnergyCostModifier(kBiteEnergyCost, player)
 end
 
 function BiteLeap:GetHUDSlot()
     return 1
-end
-
-function BiteLeap:GetSecondaryEnergyCost(player)
-    return kLeapEnergyCost
 end
 
 function BiteLeap:GetIconOffsetY(secondary)
@@ -101,41 +93,6 @@ function BiteLeap:PerformPrimaryAttack(player)
     end        
 
     return true
-end
-
-// Leap if it makes sense (not if looking down).
-function BiteLeap:PerformSecondaryAttack(player)
-
-    local parent = self:GetParent()
-    if parent and self:GetHasSecondary(player) then
-    
-        // Check to make sure there's nothing right in front of us
-        local startPoint = player:GetEyePos()
-        local viewCoords = player:GetViewAngles():GetCoords()
-        local kLeapCheckRange = 2
-        
-        local trace = Shared.TraceRay(startPoint, startPoint + viewCoords.zAxis * kLeapCheckRange, PhysicsMask.AllButPCs, EntityFilterOne(player))
-        if(trace.fraction == 1) then
-        
-            // Make sure we're on the ground or something else
-            trace = Shared.TraceRay(startPoint, Vector(startPoint.x, startPoint.y - .5, startPoint.z), PhysicsMask.AllButPCs, EntityFilterOne(player))
-            if(trace.fraction ~= 1 or player:GetCanJump()) then
-        
-                // TODO: Pass this into effects system
-                local volume = ConditionalValue(player:GetHasUpgrade(kTechId.Leap), 1, .6)
-                
-                player:OnLeap()
-                
-                return true
-                
-            end
-            
-        end
-        
-    end
-    
-    return false
-    
 end
 
 function BiteLeap:GetEffectParams(tableParams)

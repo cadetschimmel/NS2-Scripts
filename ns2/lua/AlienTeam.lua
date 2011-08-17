@@ -25,7 +25,7 @@ AlienTeam.kSupportingStructureClassNames = {[kTechId.Hive] = {"Hive"} }
 AlienTeam.kUpgradeStructureClassNames = {[kTechId.Crag] = {"Crag", "MatureCrag"}, [kTechId.Shift] = {"Shift", "MatureShift"}, [kTechId.Shade] = {"Shade", "MatureShift"} }
 AlienTeam.kUpgradedStructureTechTable = {[kTechId.Crag] = {kTechId.MatureCrag}, [kTechId.Shift] = {kTechId.MatureShift}, [kTechId.Shade] = {kTechId.MatureShade}}
 
-AlienTeam.kTechTreeIdsToUpdate = {kTechId.Crag, kTechId.MatureCrag, kTechId.Shift, kTechId.MatureShift, kTechId.Shade, kTechId.MatureShade}
+AlienTeam.kTechTreeIdsToUpdate = { kTechId.Crag, kTechId.MatureCrag, kTechId.Shift, kTechId.MatureShift, kTechId.Shade, kTechId.MatureShade }
 
 function AlienTeam:GetTeamType()
     return kAlienTeamType
@@ -320,24 +320,19 @@ function AlienTeam:DeleteOldBlips(time)
     
 end
 
-function AlienTeam:GetUmbraCrags()
+function AlienTeam:GetUmbraClouds()
 
-    local crags = GetEntitiesForTeam("Crag", self:GetTeamNumber())
+    local clouds = GetEntitiesForTeam("UmbraCloud", self:GetTeamNumber())
     
-    local umbraCrags = {}    
+    local umbraClouds = {}    
+
+    for index, cloud in ipairs(clouds) do
     
-    // Get umbraing crags
-    for index, crag in ipairs(crags) do
-    
-        if crag:GetIsUmbraActive() then
-        
-            table.insert(umbraCrags, crag)
-            
-        end
+       table.insert(umbraClouds, cloud)
         
     end
     
-    return umbraCrags
+    return umbraClouds
 
 end
 
@@ -363,23 +358,32 @@ function AlienTeam:GetFuryWhips()
 end
 
 function AlienTeam:GetShades()
-    return GetEntitiesForTeam("Shade", self:GetTeamNumber())
+
+	local shades = GetEntitiesForTeam("Shade", self:GetTeamNumber())
+	local mini_shade = GetEntitiesForTeam("MiniShade", self:GetTeamNumber())
+	
+	for k, v in pairs(mini_shade) do
+        table.insert(shades, v)
+    end
+	
+    return shades
+    
 end
 
-// Adds the InUmbra game effect to all specified entities within range of active crags. Returns
+// Adds the InUmbra game effect to all specified entities within range of active umbra clouds. Returns
 // the number of entities affected.
 function AlienTeam:UpdateUmbraGameEffects(entities)
 
-    local umbraCrags = self:GetUmbraCrags()
+    local umbraClouds = self:GetUmbraClouds()
     
-    if table.count(umbraCrags) > 0 then
+    if table.count(umbraClouds) > 0 then
     
         for index, entity in ipairs(entities) do
         
             // Get distance to crag
-            for cragIndex, crag in ipairs(umbraCrags) do
+            for cloudIndex, cloud in ipairs(umbraClouds) do
             
-                if (entity:GetOrigin() - crag:GetOrigin()):GetLengthSquared() < Crag.kUmbraRadius*Crag.kUmbraRadius then
+                if (entity:GetOrigin() - cloud:GetOrigin()):GetLengthSquared() < cloud:GetRadius()*cloud:GetRadius() then
                 
                     entity:SetGameEffectMask(kGameEffect.InUmbra, true)
                 
@@ -430,46 +434,51 @@ function AlienTeam:UpdateShadeEffects(teamEntities, enemyPlayers)
 
     local shades = self:GetShades()
     local time = Shared.GetTime()
+    local range = 0
     
     if self.lastUpdateShadeTime == nil or (Shared.GetTime() > self.lastUpdateShadeTime + .3) then
     
-        // Update disoriented effects
+        // Update disorient flag on players
         for index, entity in ipairs(enemyPlayers) do
             
-            if HasMixin(entity, "Disorientable") then
-            
-                local disorientedMinDistance = math.huge
+            local disoriented = false
+
     
-                if table.count(shades) > 0 then
-            
+            if table.count(shades) > 0 then
+
+        
+                if not entity:isa("Commander") then
+
+
                     for index, shade in ipairs(shades) do
-                    
-                        local distance = (entity:GetOrigin() - shade:GetOrigin()):GetLength()
+
+						if shade:isa("MiniShade") then
+							range = MiniShade.kDistortRadius
+						else
+							range = Shade.kCloakRadius
+						end
+                    	
+                        if (entity:GetOrigin() - shade:GetOrigin()):GetLengthSquared() < range*range then
                         
-                        if (distance < Shade.kCloakRadius) and (distance < disorientedMinDistance) then
-                            
-                            disorientedMinDistance = distance
+                            disoriented = true
                         
                         end
-                        
+
                     end
-                        
+                    
                 end
-                
-                local disorientedAmount = Clamp(ConditionalValue(disorientedMinDistance < math.huge, 1 - (disorientedMinDistance / Shade.kCloakRadius), 0), 0, 1)
-                entity:SetDisorientedAmount(disorientedAmount)
                 
             end
             
+            entity:SetGameEffectMask(kGameEffect.Disorient, disoriented)
+            
         end
-        
+
         self.lastUpdateShadeTime = time
         
     end
     
 end
-
-
 
 function AlienTeam:InitTechTree()
    
@@ -479,13 +488,21 @@ function AlienTeam:InitTechTree()
     self.techTree:AddMenu(kTechId.MarkersMenu)
     self.techTree:AddMenu(kTechId.UpgradesMenu)
     self.techTree:AddMenu(kTechId.ShadePhantasmMenu)
+    self.techTree:AddMenu(kTechId.EggMenu)
+    
+    // Add egg types
+    
+    self.techTree:AddBuyNode(kTechId.GorgeEgg,                     kTechId.None,                 kTechId.None)
+    self.techTree:AddBuyNode(kTechId.LerkEgg,                      kTechId.LerkTech,             kTechId.Morpher)
+    self.techTree:AddBuyNode(kTechId.FadeEgg,                      kTechId.FadeTech,             kTechId.Morpher)
+    self.techTree:AddBuyNode(kTechId.OnosEgg,                      kTechId.OnosTech,          	 kTechId.Morpher)
     
     // Add markers (orders)
-    self.techTree:AddSpecial(kTechId.ThreatMarker, true)
-    self.techTree:AddSpecial(kTechId.LargeThreatMarker, true)
-    self.techTree:AddSpecial(kTechId.NeedHealingMarker, true)
-    self.techTree:AddSpecial(kTechId.WeakMarker, true)
-    self.techTree:AddSpecial(kTechId.ExpandingMarker, true)
+    self.techTree:AddOrder(kTechId.ThreatMarker)
+    self.techTree:AddOrder(kTechId.LargeThreatMarker)
+    self.techTree:AddOrder(kTechId.NeedHealingMarker)
+    self.techTree:AddOrder(kTechId.WeakMarker)
+    self.techTree:AddOrder(kTechId.ExpandingMarker)
     
     // Commander abilities
     self.techTree:AddEnergyBuildNode(kTechId.Cyst,           kTechId.None,           kTechId.None)
@@ -515,18 +532,25 @@ function AlienTeam:InitTechTree()
     self.techTree:AddActivation(kTechId.WhipUnroot)
     self.techTree:AddActivation(kTechId.WhipRoot)
     
-    self.techTree:AddResearchNode(kTechId.Melee1Tech,             kTechId.Whip,                kTechId.None)
+    self.techTree:AddResearchNode(kTechId.LerkTech,             kTechId.Morpher,                kTechId.None)
+    self.techTree:AddResearchNode(kTechId.FadeTech,             kTechId.Morpher,                kTechId.None)
+    self.techTree:AddResearchNode(kTechId.OnosTech,             kTechId.Morpher,                kTechId.None)
+    
+    self.techTree:AddResearchNode(kTechId.Melee1Tech,             kTechId.None,                kTechId.None)
     self.techTree:AddResearchNode(kTechId.Melee2Tech,             kTechId.Melee1Tech,                kTechId.None)
     self.techTree:AddResearchNode(kTechId.Melee3Tech,             kTechId.Melee2Tech,                kTechId.None)
     
     self.techTree:AddTargetedActivation(kTechId.WhipBombard,                  kTechId.MatureWhip, kTechId.None)
+
+    self.techTree:AddBuildNode(kTechId.Morpher,                 	kTechId.Hive,                kTechId.None)
     
     // Tier 1 lifeforms
+    self.techTree:AddBuildNode(kTechId.Egg,                 	kTechId.None,                kTechId.None)
     self.techTree:AddBuyNode(kTechId.Skulk,                     kTechId.None,                kTechId.None)
     self.techTree:AddBuyNode(kTechId.Gorge,                     kTechId.None,                kTechId.None)
-    self.techTree:AddBuyNode(kTechId.Lerk,                      kTechId.None,                kTechId.None)
-    self.techTree:AddBuyNode(kTechId.Fade,                      kTechId.TwoHives,            kTechId.None)
-    self.techTree:AddBuyNode(kTechId.Onos,                      kTechId.ThreeHives,          kTechId.None)
+    self.techTree:AddBuyNode(kTechId.Lerk,                      kTechId.LerkTech,                kTechId.Morpher)
+    self.techTree:AddBuyNode(kTechId.Fade,                      kTechId.FadeTech,            	 kTechId.Morpher)
+    self.techTree:AddBuyNode(kTechId.Onos,                      kTechId.OnosTech,          		 kTechId.Morpher)
     
     // Special alien upgrade structures. These tech nodes are modified at run-time, depending when they are built, so don't modify prereqs.
     self.techTree:AddBuildNode(kTechId.Crag,                      kTechId.None,          kTechId.None)
@@ -534,6 +558,7 @@ function AlienTeam:InitTechTree()
     self.techTree:AddBuildNode(kTechId.Shade,                     kTechId.None,          kTechId.None)
     
     // Crag
+    self.techTree:AddUpgradeNode(kTechId.UpgradeMiniCrag,            kTechId.MiniCrag,                kTechId.None)
     self.techTree:AddUpgradeNode(kTechId.UpgradeCrag,            kTechId.Crag,                kTechId.None)
     self.techTree:AddBuildNode(kTechId.MatureCrag,                kTechId.TwoHives,                kTechId.None)
     self.techTree:AddActivation(kTechId.CragHeal,                    kTechId.None,          kTechId.None)
@@ -542,6 +567,7 @@ function AlienTeam:InitTechTree()
     self.techTree:AddTargetedActivation(kTechId.CragBabblers,     kTechId.BabblerTech,         kTechId.MatureCrag)
 
     // Shift    
+    self.techTree:AddUpgradeNode(kTechId.UpgradeMiniShift,            kTechId.MiniShift,               kTechId.None)
     self.techTree:AddUpgradeNode(kTechId.UpgradeShift,            kTechId.Shift,               kTechId.None)
     self.techTree:AddBuildNode(kTechId.MatureShift,               kTechId.TwoHives,          kTechId.None)
     self.techTree:AddActivation(kTechId.ShiftRecall,              kTechId.None, kTechId.None)
@@ -550,6 +576,7 @@ function AlienTeam:InitTechTree()
     self.techTree:AddActivation(kTechId.ShiftEnergize,            kTechId.None,         kTechId.None)
 
     // Shade
+    self.techTree:AddUpgradeNode(kTechId.UpgradeMiniShade,           kTechId.MiniShade,               kTechId.None)
     self.techTree:AddUpgradeNode(kTechId.UpgradeShade,           kTechId.Shade,               kTechId.None)
     self.techTree:AddBuildNode(kTechId.MatureShade,               kTechId.None,          kTechId.None)
     self.techTree:AddActivation(kTechId.ShadeDisorient,               kTechId.None,         kTechId.None)
@@ -563,7 +590,7 @@ function AlienTeam:InitTechTree()
 
 
     // Crag upgrades
-    self.techTree:AddResearchNode(kTechId.AlienArmor1Tech,        kTechId.Crag,                kTechId.None)
+    self.techTree:AddResearchNode(kTechId.AlienArmor1Tech,        kTechId.None,                kTechId.None)
     self.techTree:AddResearchNode(kTechId.AlienArmor2Tech,        kTechId.AlienArmor1Tech,          kTechId.None)
     self.techTree:AddResearchNode(kTechId.AlienArmor3Tech,        kTechId.AlienArmor2Tech,          kTechId.None)
     
@@ -571,6 +598,7 @@ function AlienTeam:InitTechTree()
     self.techTree:AddSpecial(kTechId.TwoHives)
     self.techTree:AddResearchNode(kTechId.BileBombTech,           kTechId.TwoHives,                kTechId.None,    kTechId.MatureWhip)
     self.techTree:AddResearchNode(kTechId.LeapTech,               kTechId.TwoHives,                kTechId.None)
+    self.techTree:AddResearchNode(kTechId.BlinkTech,              kTechId.TwoHives,                kTechId.None)
     
     // Tier 3
     self.techTree:AddSpecial(kTechId.ThreeHives)    
@@ -594,8 +622,12 @@ function AlienTeam:InitTechTree()
 
     // Specific alien upgrades
     self.techTree:AddBuildNode(kTechId.Hydra,               kTechId.None,               kTechId.None)
+    self.techTree:AddBuildNode(kTechId.MiniCrag,               kTechId.Crag,               kTechId.None)
+    self.techTree:AddBuildNode(kTechId.MiniShift,               kTechId.Shift,               kTechId.None)
+    self.techTree:AddBuildNode(kTechId.MiniShade,               kTechId.Shade,               kTechId.None)
     self.techTree:AddBuyNode(kTechId.BileBomb,              kTechId.BileBombTech,       kTechId.TwoHives,               kTechId.Gorge)
     self.techTree:AddBuyNode(kTechId.Leap,                  kTechId.LeapTech,           kTechId.TwoHives,               kTechId.Skulk)
+    self.techTree:AddBuyNode(kTechId.Blink,                 kTechId.BlinkTech,          kTechId.TwoHives,               kTechId.Fade)
     
     // Alien upgrades   
     self.techTree:AddResearchNode(kTechId.AdrenalineTech, kTechId.TwoHives, kTechId.Shift)

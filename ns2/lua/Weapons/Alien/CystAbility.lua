@@ -1,69 +1,69 @@
 // ======= Copyright © 2003-2011, Unknown Worlds Entertainment, Inc. All rights reserved. =======
 //
-// lua\Weapons\Alien\CystAbility.lua
+// lua\Weapons\Alien\CystStructureAbility.lua
 //
 //    Created by:   Charlie Cleveland (charlie@unknownworlds.com)
 //
 // Gorge builds hydra.
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
-Script.Load("lua/Weapons/Alien/Ability.lua")
 
-class 'CystAbility' (DropStructureAbility)
+Script.Load("lua/Weapons/Alien/StructureAbility.lua")
 
-CystAbility.kMapName = "cyst_ability"
+class 'CystStructureAbility' (StructureAbility)
 
-function CystAbility:GetEnergyCost(player)
+CystStructureAbility.kModelName = PrecacheAsset("models/alien/small_pustule/small_pustule.model")
+CystStructureAbility.kOffModelName = PrecacheAsset("models/alien/small_pustule/small_pustule_off.model")
+CystStructureAbility.kMapName = "cyst_ability"
+
+function CystStructureAbility:GetEnergyCost(player)
     return 40
 end
 
-function CystAbility:GetPrimaryAttackDelay()
+function CystStructureAbility:GetPrimaryAttackDelay()
     return 1.0
 end
 
-function CystAbility:GetIconOffsetY(secondary)
+function CystStructureAbility:GetIconOffsetY(secondary)
     return kAbilityOffset.Hydra
 end
 
-function CystAbility:GetDropStructureId()
+function CystStructureAbility:GetDropStructureId()
     return kTechId.MiniCyst
 end
 
-function CystAbility:GetSuffixName()
+function CystStructureAbility:GetSuffixName()
     return "minicyst"
 end
 
-function CystAbility:GetDropClassName()
+function CystStructureAbility:GetDropClassName()
     return "MiniCyst"
 end
 
-function CystAbility:GetDropMapName()
+function CystStructureAbility:GetDropMapName()
     return MiniCyst.kMapName
 end
 
-function CystAbility:GetHUDSlot()
-    return 3
-end
+function CystStructureAbility:GetConnection(ability)
 
-function CystAbility:GetConnection()
+    PROFILE("CystStructureAbility:GetConnection")
 
-    PROFILE("CystAbility:GetConnection")
-
-    local player = self:GetParent()
-    local coords = self:GetPositionForStructure(player)
+    local player = ability:GetParent()
+    local coords = ability:GetPositionForStructure(player)
     return GetCystParentFromPoint(coords.origin, coords.yAxis)
     
 end
 
-function CystAbility:GetGhostModelName()
+function CystStructureAbility:GetGhostModelName(ability)
 
     // Use a different model if we're within connection range or not
-    local connectedEnt = self:GetConnection()
+    local connectedEnt = CystStructureAbility.GetConnection(self, ability)
+    
     return ConditionalValue(connectedEnt, MiniCyst.kModelName, MiniCyst.kOffModelName)
     
 end
 
-function CystAbility:CreateStructure(coords, player)
+function CystStructureAbility:CreateStructure(coords, player)
 
     // Create mini cyst
     local cyst, connected = CreateCyst(player, coords.origin, coords.yAxis, true)
@@ -80,7 +80,7 @@ end
 
 /* Uncomment to see lines to connection
 if Client then
-function CystAbility:OnUpdate(deltaTime)
+function CystStructureAbility:OnUpdate(deltaTime)
 
     DropStructureAbility.OnUpdate(self, deltaTime)
     
@@ -95,4 +95,4 @@ end
 end
 */
 
-Shared.LinkClassToMap("CystAbility", CystAbility.kMapName, {} )
+Shared.LinkClassToMap("CystStructureAbility", CystStructureAbility.kMapName, {} )

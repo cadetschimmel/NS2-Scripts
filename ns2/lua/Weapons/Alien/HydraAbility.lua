@@ -1,48 +1,48 @@
 // ======= Copyright © 2003-2011, Unknown Worlds Entertainment, Inc. All rights reserved. =======
 //
-// lua\Weapons\Alien\HydraAbility.lua
+// lua\Weapons\Alien\HydraStructureAbility.lua
 //
-//    Created by:   Charlie Cleveland (charlie@unknownworlds.com)
+//    Created by:   Andreas Urwalek (a_urwa@sbox.tugraz.at)
 //
 // Gorge builds hydra.
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
-Script.Load("lua/Weapons/Alien/DropStructureAbility.lua")
+Script.Load("lua/Weapons/Alien/StructureAbility.lua")
 
-class 'HydraAbility' (DropStructureAbility)
+class 'HydraStructureAbility' (StructureAbility)
 
-HydraAbility.kMapName = "hydra_ability"
+HydraStructureAbility.kMapName = "hydra_ability"
 
-function HydraAbility:GetEnergyCost(player)
+function HydraStructureAbility:GetEnergyCost(player)
     return 40
 end
 
-function HydraAbility:GetPrimaryAttackDelay()
+function HydraStructureAbility:GetPrimaryAttackDelay()
     return 1.0
 end
 
-function HydraAbility:GetIconOffsetY(secondary)
+function HydraStructureAbility:GetIconOffsetY(secondary)
     return kAbilityOffset.Hydra
 end
 
-function HydraAbility:GetDropStructureId()
+function HydraStructureAbility:GetGhostModelName(ability)
+    return Hydra.kModelName
+end
+
+function HydraStructureAbility:GetDropStructureId()
     return kTechId.Hydra
 end
 
-function HydraAbility:GetSuffixName()
+function HydraStructureAbility:GetSuffixName()
     return "hydra"
 end
 
-function HydraAbility:GetDropClassName()
+function HydraStructureAbility:GetDropClassName()
     return "Hydra"
 end
 
-function HydraAbility:GetDropMapName()
+function HydraStructureAbility:GetDropMapName()
     return Hydra.kMapName
 end
 
-function HydraAbility:GetHUDSlot()
-    return 2
-end
-
-Shared.LinkClassToMap("HydraAbility", HydraAbility.kMapName, {} )
+Shared.LinkClassToMap("HydraStructureAbility", HydraStructureAbility.kMapName, {} )

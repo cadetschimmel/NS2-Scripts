@@ -25,13 +25,8 @@ function PrototypeLab:GetTechButtons(techId)
 
     if(techId == kTechId.RootMenu) then
     
-        return  {   kTechId.None, kTechId.None, kTechId.None, kTechId.None, 
-                    kTechId.None, kTechId.None, kTechId.None, kTechId.None }
-
-    elseif techId == kTechId.kTechId.PrototypeLabUpgradesMenu then
-    
         return {   kTechId.JetpackTech, kTechId.JetpackFuelTech, kTechId.JetpackArmorTech, kTechId.None,
-                   kTechId.ExosuitTech, kTechId.ExoskeletonLockdownTech, kTechId.ExoskeletonUpgradeTech, kTechId.RootMenu }
+                   kTechId.ExosuitTech, kTechId.ExoskeletonLockdownTech, kTechId.ExoskeletonUpgradeTech, kTechId.None }
         
     end
     

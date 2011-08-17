@@ -100,8 +100,8 @@ function MarineCommander:GetQuickMenuTechButtons(techId)
         
     elseif(techId == kTechId.AssistMenu) then 
     
-        menuButtons = { kTechId.AmmoPack, kTechId.MedPack, kTechId.CatPack, kTechId.None,
-                        kTechId.Shotgun, kTechId.GrenadeLauncher, kTechId.Flamethrower, kTechId.None}
+        menuButtons = { kTechId.AmmoPack, kTechId.MedPack, kTechId.CatPack, kTechId.Jetpack,
+                        kTechId.Shotgun, kTechId.GrenadeLauncher, kTechId.Flamethrower, kTechId.Exoskeleton }
         
     else
     

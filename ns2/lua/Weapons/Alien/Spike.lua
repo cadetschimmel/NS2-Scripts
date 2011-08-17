@@ -18,7 +18,7 @@ Spike.kMaxDamage             = kSpikeMaxDamage
 Spike.kMinDamage             = kSpikeMinDamage
 
 // Seconds
-Spike.kDamageFalloffInterval = 1
+Spike.kDamageFalloffInterval = 0.4
 
 // The max amount of time a Spike can last for
 Spike.kLifetime = 5
@@ -55,6 +55,8 @@ if (Server) then
 
     function Spike:OnCollision(targetHit)
 
+        DestroyEntity(self)
+        TriggerHitEffects(self, nil, self:GetOrigin(), nil, false)
         // Don't hit owner - shooter
         if targetHit == nil or self:GetOwner() ~= targetHit then
         

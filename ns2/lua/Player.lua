@@ -17,8 +17,6 @@ Script.Load("lua/TooltipMixin.lua")
 Script.Load("lua/WeaponOwnerMixin.lua")
 Script.Load("lua/DoorMixin.lua")
 Script.Load("lua/mixins/ControllerMixin.lua")
-Script.Load("lua/TargetMixin.lua")
-
 
 /**
  * Player should not be instantiated directly. Only instantiate a Player through
@@ -232,9 +230,6 @@ function Player:OnCreate()
     LiveScriptActor.OnCreate(self)
     
     InitMixin(self, ControllerMixin)
-    if Server then
-        InitMixin(self, TargetMixin)
-    end
     
     self:SetLagCompensated(true)
     
@@ -381,6 +376,10 @@ function Player:InitializeHotkeyGroups()
         table.insert(self.hotkeyGroups, {})
     end
 
+end
+
+function Player:GetIsEthereal()
+	return false
 end
 
 function Player:OnEntityChange(oldEntityId, newEntityId)
@@ -734,7 +733,7 @@ end
 function Player:SecondaryAttack()
 
     local weapon = self:GetActiveWeapon()        
-    if weapon and self:GetCanNewActivityStart() then
+    if weapon and self:GetCanNewActivityStart() and weapon:GetHasSecondary(self) then
         weapon:OnSecondaryAttack(self)
     end
 
@@ -995,7 +994,7 @@ function Player:GetMass()
 end
 
 function Player:AddResources(amount)
-    local newResources = math.max(math.min(self.resources + amount, kMaxResources), 0)
+    local newResources = math.max(math.min(self.resources + amount, kMaxPRes), 0)
     if newResources ~= self.resources then
         self.resources = newResources
         self:SetScoreboardChanged(true)
@@ -1206,20 +1205,39 @@ function Player:UpdateViewAngles(input)
 
     PROFILE("Player:UpdateViewAngles")
     
-    if (self.desiredRoll ~= 0) then
+    if(self.desiredPitch ~= nil or self.desiredRoll ~= nil) then
     
-        local angles = Angles(self:GetAngles())        
         local kRate = input.time * 10
-        angles.roll = SlerpRadians(angles.roll, self.desiredRoll, kRate)
-       
-        self:SetAngles(angles)
+    
+        local angles = Angles(self:GetAngles())
+        
+        if(self.desiredRoll ~= nil) then
+            angles.roll = SlerpRadians(angles.roll, self.desiredRoll, kRate)
+            self:SetAngles(angles)
+        end
+        
+        local viewAngles = Angles(input.pitch, input.yaw, 0)
+        
+        /*
+        if(self.desiredRoll ~= nil) then
+            viewAngles.roll = SlerpRadians(viewAngles.roll, 0 + self.desiredRoll, kRate)
+        end
+        
+        if(self.desiredPitch ~= nil) then
+            viewAngles.pitch = SlerpRadians(viewAngles.pitch, input.pitch + self.desiredPitch, kRate)
+        end
+        */
+                
+        self:SetViewAngles(viewAngles)
 
-    end
+    else
+    
+        // Update to the current view angles.    
+        local viewAngles = Angles(input.pitch, input.yaw, 0)
+        self:SetViewAngles(viewAngles)
         
-    // Update to the current view angles.    
-    local viewAngles = Angles(input.pitch, input.yaw, 0)
-    self:SetViewAngles(viewAngles)
-        
+    end    
+    
     // Update view offset from crouching
     local viewY = self:GetMaxViewOffsetHeight()
     viewY = viewY - viewY * self:GetCrouchShrinkAmount() * self:GetCrouchAmount()
@@ -1267,13 +1285,14 @@ function Player:OnProcessMove(input)
         // Allow children to alter player's move before processing. To alter the move
         // before it's sent to the server, use OverrideInput
         input = self:AdjustMove(input)
+        
+        // Hit Reg Fix by wulf 21
+        // Check for jumping, attacking, etc.
+        self:HandleButtons(input)
 
         // Update player angles and view angles smoothly from desired angles if set. 
         // But visual effects should only be calculated when not predicting.
         self:UpdateViewAngles(input)
-        
-        // Check for jumping, attacking, etc.
-        self:HandleButtons(input)
 
         if HasMixin(self, "Move") then
             // Update origin and velocity from input move (main physics behavior).

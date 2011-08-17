@@ -8,12 +8,14 @@
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Alien/Ability.lua")
 Script.Load("lua/Weapons/Alien/Spike.lua")
+Script.Load("lua/Weapons/Alien/Umbra.lua")
 
-class 'Spikes' (Ability)
+class 'Spikes' (Umbra)
 
 Spikes.kMapName = "spikes"
 
 Spikes.kModelName = PrecacheAsset("models/alien/lerk/lerk_view_spike.model")
+Spikes.kImpact = PrecacheAsset("cinematics/alien/lerk/spike_impact.cinematic")
 
 // Lerk spikes (view model)
 Spikes.kPlayerAnimAttack = "spikes"
@@ -27,6 +29,8 @@ Spikes.kSpikeEnergy = kSpikeEnergyCost
 Spikes.kSnipeEnergy = kSpikesAltEnergyCost
 Spikes.kSnipeDamage = kSpikesAltDamage
 Spikes.kSpread2Degrees = Vector( 0.01745, 0.01745, 0.01745 )
+Spikes.kRange = 20
+Spikes.zoomFaktorScalar = 1
 
 local networkVars =
 {
@@ -38,7 +42,7 @@ local networkVars =
 
 function Spikes:OnCreate()
 
-    Ability.OnCreate(self)
+    Umbra.OnCreate(self)
 
     self.zoomedIn = false
     self.fireLeftNext = true
@@ -62,12 +66,9 @@ function Spikes:OnDestroy()
 end
 
 function Spikes:GetEnergyCost(player)
-    return ConditionalValue(self.zoomedIn, Spikes.kSnipeEnergy, Spikes.kSpikeEnergy)
+    return self:ApplyEnergyCostModifier(ConditionalValue(self.zoomedIn, Spikes.kSnipeEnergy, Spikes.kSpikeEnergy), player)
 end
 
-function Spikes:GetHasSecondary(player)
-    return true
-end
 
 function Spikes:GetIconOffsetY(secondary)
     return ConditionalValue(not self.zoomedIn, kAbilityOffset.Spikes, kAbilityOffset.Sniper)
@@ -94,21 +95,34 @@ function Spikes:PerformPrimaryAttack(player)
 
     // Alternate view model animation to fire left then right
     self.fireLeftNext = not self.fireLeftNext
-
-    if not self.zoomedIn then
-    
-        self:FireSpikeProjectile(player)        
-        
-    else
-    
-        // Snipe them!
-        self:PerformZoomedAttack(player)
-        
-    end
+	self:FireSpikeProjectile(player)        
 
     player:SetActivityEnd(player:AdjustFuryFireDelay(self:GetPrimaryAttackDelay()))
     
     return true
+end
+
+function Spikes:GetSpread()
+    return Math.Radians(10)
+end
+
+function Spikes:GetInaccuracyScalar()
+    return 1
+end
+
+function Spikes:GetMaxRange()
+    //TODO: take zoom factor into consideration
+    return Spikes.kRange
+end
+
+// Play ricochet sound/effect every %d bullets
+function Spikes:GetRicochetEffectFrequency()
+    return 1
+end
+
+// To create a tracer 20% of the time, return .2. 0 disables tracers.
+function Spikes:GetTracerPercentage()
+    return 0
 end
 
 function Spikes:FireSpikeProjectile(player)
@@ -148,11 +162,11 @@ function Spikes:FireSpikeProjectile(player)
         local spread = Spikes.kSpread2Degrees 
         local direction = viewCoords.zAxis + x * spread.x * viewCoords.xAxis + y * spread.y * viewCoords.yAxis
 
-        spike:SetVelocity(direction * 20)
+        spike:SetVelocity(direction * 40)
         
         spike:SetOrientationFromVelocity()
         
-        spike:SetGravityEnabled(true)
+        spike:SetGravityEnabled(false)
         
         // Set spike parent to player so we don't collide with ourselves and so we
         // can attribute a kill to us
@@ -165,7 +179,119 @@ function Spikes:FireSpikeProjectile(player)
         spike:SetDeathIconIndex(self:GetDeathIconIndex())
                 
     end
+    
+    local hitTarget = false
+    local viewAngles = player:GetViewAngles()
+    local viewCoords = viewAngles:GetCoords()
+    local range = self:GetMaxRange()
+    local startPoint = player:GetEyePos()
+        
+    // Filter ourself out of the trace so that we don't hit ourselves.
+    local filter = EntityFilterTwo(player, self)
+       
+    if Client then
+        DbgTracer.MarkClientFire(player, startPoint)
+    end
+   
 
+
+    // Calculate spread for each shot, in case they differ
+    local spreadAngle = self:GetSpread() * self:GetInaccuracyScalar() / 2
+    
+    local randomAngle  = NetworkRandom() * math.pi * 2
+    local randomRadius = NetworkRandom() * NetworkRandom() * math.tan(spreadAngle)
+    
+    local fireDirection = viewCoords.zAxis + (viewCoords.xAxis * math.cos(randomAngle) + viewCoords.yAxis * math.sin(randomAngle)) * randomRadius
+    fireDirection:Normalize()
+   
+    local endPoint = startPoint + fireDirection * range
+    
+    local trace = Shared.TraceRay(startPoint, endPoint, PhysicsMask.Bullets, filter)
+    
+    if Server then
+        Server.dbgTracer:TraceBullet(player, startPoint, trace)  
+    end
+    
+    if (trace.fraction < 1) then
+        
+        // Create local tracer effect, and send to other players
+        if (NetworkRandom(string.format("%s:FireBullet():TracerCheck", self:GetClassName())) < self:GetTracerPercentage()) then
+        
+            local tracerStart = startPoint + player:GetViewAngles():GetCoords().zAxis
+            local tracerVelocity = GetNormalizedVector(trace.endPoint - tracerStart) * 45
+            TriggerTracer(player, tracerStart, trace.endPoint, tracerVelocity)
+            
+        end
+        
+        //DebugLine(startPoint, trace.endPoint, 15, ConditionalValue(trace.entity, 1, 0), ConditionalValue(trace.entity, 0, 1), ConditionalValue(trace.entity, 0, 0), 1)
+
+        
+        if trace.entity then
+        
+            local direction = (trace.endPoint - startPoint):GetUnit()
+            self:ApplyBulletGameplayEffects(player, trace.entity, trace.endPoint, direction)
+            hitTarget = true
+
+        end
+                    
+        // TODO: Account for this
+        // Play ricochet sound for player locally for feedback, but not necessarily for every bullet
+        local effectFrequency = self:GetRicochetEffectFrequency()
+        
+        
+            local impactPoint = trace.endPoint - GetNormalizedVector(endPoint - startPoint) * Weapon.kHitEffectOffset
+            local surfaceName = trace.surface
+            TriggerHitEffects(self, trace.entity, impactPoint, surfaceName, false)
+            
+            // If we are far away from our target, trigger a private sound so we can hear we hit something
+            if surfaceName and string.len(surfaceName) > 0 and (trace.endPoint - player:GetOrigin()):GetLength() > 5 then
+                
+                player:TriggerEffects("hit_effect_local", {surface = surfaceName})
+                
+            end
+        
+        // Update accuracy
+        //self.accuracy = math.max(math.min(1, self.accuracy - self:GetAccuracyLossPerShot(player)), 0)
+
+    end
+    
+    return hitTarget 
+
+end
+
+function Spikes:ApplyBulletGameplayEffects(player, target, endPoint, direction)
+
+    if(Server) then
+    
+        if target:isa("LiveScriptActor") and GetGamerules():CanEntityDoDamageTo(player, target) then
+        
+            target:TakeDamage(self:GetSpikeDamage(player, target, endPoint), player, self, endPoint, direction)
+            
+        end
+    
+        self:GetParent():SetTimeTargetHit()
+        
+    end
+    
+end
+
+function Spikes:GetSpikeDamage(player, target, endPoint)
+    // TODO: actual damage calculation depending on zoom factor
+    local distance = (endPoint - player:GetOrigin()):GetLength()
+    
+    local maxRange = kSpikeMaxRange * self:GetZoomFactor()
+    local minRange = kSpikeMinRange * self:GetZoomFactor()
+    
+    local damage = kSpikeMaxDamage
+    
+    if distance > maxRange then
+    
+        local distanceFactor = (distance - maxRange) / (minRange - maxRange)
+        local dmgScalar = 1 - Clamp(distanceFactor, 0, 1) 
+        damage = kSpikeMinDamage + dmgScalar * (kSpikeMaxDamage - kSpikeMinDamage)
+        
+    end
+    return damage 
 end
 
 function Spikes:PerformZoomedAttack(player)
@@ -222,23 +348,6 @@ function Spikes:SetZoomState(player, zoomedIn)
     
 end
 
-// Toggle zoom
-function Spikes:PerformSecondaryAttack(player)
-
-    if(player:GetCanNewActivityStart()) then
-    
-        self:SetZoomState(player, not self.zoomedIn)
-                
-        player:SetActivityEnd(player:AdjustFuryFireDelay(Spikes.kZoomDelay))
-        
-        return true
-        
-    end
-    
-    return false
-    
-end
-
 function Spikes:UpdateViewModelPoseParameters(viewModel, input)
 
     Ability.UpdateViewModelPoseParameters(self, viewModel, input)
@@ -271,13 +380,9 @@ function Spikes:OnUpdate(deltaTime)
     
 end
 
-function Spikes:GetSecondaryAttackRequiresPress()
-    return true
-end
-
-function Spikes:GetSecondaryEnergyCost(player)
-    return 0
-end
+function Spikes:GetZoomFactor()
+    return Clamp(self.timeZoomedIn * Spikes.zoomFaktorScalar, 1, kSpikesMaxZoomFaktor * Spikes.zoomFaktorScalar )
+end    
 
 function Spikes:GetEffectParams(tableParams)
 

@@ -135,6 +135,13 @@ function Marine:OnKill(damage, attacker, doer, point, direction)
     // Remember squad we were in on death so we can beam back to them
     self.lastSquad = self:GetSquad()
     
+    // remove the jetpack
+    if self.hasJetpack and self.jetpackId ~= Entity.invalidId then
+    	DestroyEntity(Shared.GetEntity(self.jetpackId))
+	end
+    
+    self.hasJetpack = false
+    
 end
 
 function Marine:KillWeapons()
@@ -153,7 +160,7 @@ function Marine:KillWeapons()
 end
 
 function Marine:OnResearchComplete(structure, researchId)
-
+	
     local success = Player.OnResearchComplete(self, structure, researchId)
     
     // For armor upgrades, give us more armor immediately (preserving percentage)
@@ -165,7 +172,17 @@ function Marine:OnResearchComplete(structure, researchId)
             self.maxArmor = self:GetArmorAmount()
             self.armor = self.maxArmor * armorPercent
             
-        end    
+        elseif (researchId == kTechId.JetpackFuelTech) and self.hasJetpack then
+        
+        	self:UpgradeJetpackMobility()
+        	
+    	elseif (researchId == kTechId.JetpackArmorTech) and self.hasJetpack then
+    	
+    		local armorPercent = self.armor/self.maxArmor
+            self.maxArmor = self:GetArmorAmount()
+            self.armor = self.maxArmor * armorPercent
+            
+    	end
         
     end
     

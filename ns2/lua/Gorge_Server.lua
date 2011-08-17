@@ -12,8 +12,9 @@ function Gorge:InitWeapons()
     Alien.InitWeapons(self)
 
     self:GiveItem(SpitSpray.kMapName)
-    self:GiveItem(HydraAbility.kMapName)
-    self:GiveItem(CystAbility.kMapName)
+    self:GiveItem(BileBomb.kMapName)
+    self:GiveItem(BileBomb.kMapName)
+    self:GiveItem(DropStructureAbility.kMapName)
     
     self:SetActiveWeapon(SpitSpray.kMapName)
     

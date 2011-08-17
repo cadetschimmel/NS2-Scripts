@@ -84,6 +84,13 @@ function GUIAlienHUD:Initialize()
     
     self:CreateHealthBall()
     self:CreateEnergyBall()
+	self:CreateSpecialBall() // it has to be a ball aswell
+
+end
+
+function GUIAlienHUD:CreateSpecialBall()
+
+	local specialCooldown = PlayerUI_GetSpecialCooldown()
 
 end
 
@@ -416,7 +423,7 @@ end
 
 function GUIAlienHUD:UpdateInactiveAbilities(deltaTime, activeHudSlot)
 
-    local numberElementsPerAbility = 3
+    local numberElementsPerAbility = 4
     local abilityData = PlayerUI_GetInactiveAbilities()
     local numberAbilties = table.count(abilityData) / numberElementsPerAbility
     local currentIndex = 1
@@ -434,13 +441,19 @@ function GUIAlienHUD:UpdateInactiveAbilities(deltaTime, activeHudSlot)
                 local texXOffset = abilityData[currentIndex] * GUIAlienHUD.kAbilityIconSize
                 local texYOffset = abilityData[currentIndex + 1] * GUIAlienHUD.kAbilityIconSize
                 local hudSlot = abilityData[currentIndex + 2]
+                local canUse = abilityData[currentIndex + 3]
                 self.inactiveAbilityIconList[currentAbilityIndex].Icon:SetTexturePixelCoordinates(texXOffset, texYOffset, texXOffset + GUIAlienHUD.kAbilityIconSize, texYOffset + GUIAlienHUD.kAbilityIconSize)
                 if hudSlot == activeHudSlot then
                     self.inactiveAbilityIconList[currentAbilityIndex].Icon:SetColor(GUIAlienHUD.kSelectedAbilityColor)
                     self.inactiveAbilityIconList[currentAbilityIndex].Background:SetColor(GUIAlienHUD.kSelectedAbilityColor)
                 else
-                    self.inactiveAbilityIconList[currentAbilityIndex].Icon:SetColor(GUIAlienHUD.kUnselectedAbilityColor)
-                    self.inactiveAbilityIconList[currentAbilityIndex].Background:SetColor(GUIAlienHUD.kUnselectedAbilityColor)
+                	if(canUse) then
+	                    self.inactiveAbilityIconList[currentAbilityIndex].Icon:SetColor(GUIAlienHUD.kUnselectedAbilityColor)
+	                    self.inactiveAbilityIconList[currentAbilityIndex].Background:SetColor(GUIAlienHUD.kUnselectedAbilityColor)
+                    else // make it appear not usable
+	                    self.inactiveAbilityIconList[currentAbilityIndex].Icon:SetColor(GUIAlienHUD.kNotEnoughEnergyColor)
+	                    self.inactiveAbilityIconList[currentAbilityIndex].Background:SetColor(GUIAlienHUD.kNotEnoughEnergyColor)
+                    end
                 end
                 currentIndex = currentIndex + numberElementsPerAbility
             end

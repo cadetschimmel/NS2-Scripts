@@ -8,6 +8,7 @@
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Balance.lua")
 Script.Load("lua/Weapons/Marine/ClipWeapon.lua")
+Script.Load("lua/Weapons/Marine/Flechette.lua")
 
 class 'Shotgun' (ClipWeapon)
 
@@ -19,7 +20,8 @@ local networkVars =
     {
         reloadPhase         = string.format("integer (1 to %d)", kReloadPhase.End),
         reloadPhaseEnd      = "float",
-        emptyPoseParam      = "compensated float"
+        emptyPoseParam      = "compensated float",
+        flechetteAmmo 		= "integer (0 to 6)"
     }
 
 Shotgun.kModelName = PrecacheAsset("models/marine/shotgun/shotgun.model")
@@ -33,7 +35,7 @@ Shotgun.kPrimaryRange = kShotgunMinDamageRange
 Shotgun.kPrimaryMaxDamageRange = kShotgunMaxDamageRange
 Shotgun.kSecondaryRange = 10
 Shotgun.kFireDelay = kShotgunFireDelay
-Shotgun.kSecondaryFireDelay = 0.5
+Shotgun.kSecondaryFireDelay = 1.2
 
 function Shotgun:GetViewModelName()
     return Shotgun.kViewModelName
@@ -53,6 +55,10 @@ end
 
 function Shotgun:GetBulletsPerShot()
     return kShotgunBulletsPerShot
+end
+
+function Shotgun:GetHasSecondary(player)
+	return true
 end
 
 function Shotgun:GetSpread()
@@ -174,6 +180,68 @@ function Shotgun:OnPrimaryAttack(player)
     
 end
 
+function Shotgun:GetNeedsAmmo()
+
+	return ClipWeapon.GetNeedsAmmo(self) or (self.flechetteAmmo < kFlechetteAmmo)
+
+end
+
+function Shotgun:GiveAmmo(numClips)
+	
+	local refilled = false
+	
+	if self.flechetteAmmo < kFlechetteAmmo then
+		self.flechetteAmmo = Clamp(self.flechetteAmmo + numClips, 0, kFlechetteAmmo)
+		refilled = true
+	end
+	
+	return ClipWeapon.GiveAmmo(self, numClips) or refilled
+
+end
+
+function Shotgun:OnSecondaryAttack(player)
+    
+	if self.flechetteAmmo > 0 then
+	
+	    // Only allow changing reload phase if we aren't reloading or are loading a shell. The other phases block.
+	    if self.reloadPhase == kReloadPhase.None or self.reloadPhase == kReloadPhase.LoadShell then
+	        self:EnterReloadPhase(player, kReloadPhase.None)
+	    end	    
+	
+	    ClipWeapon.OnSecondaryAttack(self, player)
+	    
+	    if Server then
+	
+	        self.flechetteAmmo = self.flechetteAmmo - 1
+	        local viewAngles = player:GetViewAngles()
+	        local viewCoords = viewAngles:GetCoords()
+	        local startPoint = self:GetAttachPointOrigin("fxnode_shotgunmuzzle") + viewCoords.zAxis * 1
+	        
+	        local flechette = CreateEntity(Flechette.kMapName, startPoint, player:GetTeamNumber())
+	        SetAnglesFromVector(flechette, viewCoords.zAxis)
+	        
+	        flechette:SetPhysicsType(Actor.PhysicsType.Kinematic)
+	        
+	        local startVelocity = viewCoords.zAxis * Flechette.kSpeed
+	        flechette:SetVelocity(startVelocity)
+	        
+	        flechette:SetGravityEnabled(false)
+	        
+	        // Set flechette owner to player so we don't collide with ourselves and so we
+	        // can attribute a kill to us
+	        flechette:SetOwner(player)
+	        
+	    end
+	    
+    	player:SetActivityEnd( self:GetSecondaryAttackDelay() * player:GetCatalystFireModifier() ) 
+    	
+    else
+    	self:TriggerEffects("shotgun_no_flechette")
+    	player:SetActivityEnd( .5 ) 
+	end
+    
+end
+
 // Load bullet if we can. Returns true if there are still more to reload.
 function Shotgun:LoadBullet(player)
 
@@ -248,6 +316,8 @@ function Shotgun:OnInit()
     self.reloadPhase = kReloadPhase.None
     self.reloadPhaseEnd = 0
     self.emptyPoseParam = 0
+    
+    self.flechetteAmmo = kFlechetteAmmo
     
     ClipWeapon.OnInit(self)
     

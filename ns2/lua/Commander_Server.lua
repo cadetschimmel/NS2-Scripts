@@ -48,6 +48,9 @@ function Commander:CopyPlayerDataFrom(player)
     end
     self.timeStartedCommanderMode = Shared.GetTime()
     
+    //Save off jetpack
+    self.hasJetpack = player.hasJetpack
+    
 end
 
 // Returns nearest unattached entity of specified classtype within radius of position (nil otherwise)
@@ -142,7 +145,7 @@ end
 // Return whether action should continue to be processed for the next selected unit. Position will be nil
 // for non-targeted actions and will be the world position target for the action for targeted actions.
 function Commander:ProcessTechTreeActionForEntity(techNode, position, normal, pickVec, orientation, entity, trace)
-
+	
     local success = false
     local keepProcessing = true
 
@@ -423,6 +426,11 @@ function Commander:ProcessTechTreeAction(techId, pickVec, orientation, worldCoor
         end
         
     end
+    
+    // quickfix to bypass the "build-after-recycle" bug
+	if success and techId == kTechId.Recycle then
+		self:InternalSetSelection({ {self.commandStationId, Shared.GetTime()} } )
+	end
 
     return success
     

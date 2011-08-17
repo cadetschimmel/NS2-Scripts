@@ -8,12 +8,15 @@
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Alien/Ability.lua")
 Script.Load("lua/Weapons/Alien/SporeCloud.lua")
+Script.Load("lua/Weapons/Alien/Umbra.lua")
 
-class 'Spores' (Ability)
+class 'Spores' (Umbra)
 
 Spores.kMapName = "spores"
 Spores.kDelay = kSporesFireDelay
+Spores.kDelayBomb = kSporeMineFireDelay
 Spores.kSwitchTime = .5
+Spores.kSporeMineInitialPush = 10
 
 // Points per second
 Spores.kDamage = kSporesDamagePerSecond
@@ -23,12 +26,12 @@ local networkVars = {
 }
 
 function Spores:OnCreate()
-    Ability.OnCreate(self)
+    Umbra.OnCreate(self)
     self.sporePoseParam = 0
 end
 
 function Spores:GetEnergyCost(player)
-    return kSporesEnergyCost
+    return self:ApplyEnergyCostModifier(kSporesEnergyCost, player)
 end
 
 function Spores:GetPrimaryAttackDelay()
@@ -49,7 +52,7 @@ function Spores:PerformPrimaryAttack(player)
     local startPoint = player:GetEyePos()
 
     local trace = Shared.TraceRay(startPoint, startPoint + viewCoords.zAxis * kLerkSporeShootRange, PhysicsMask.Bullets, EntityFilterOne(player))
-    
+  
     // Create spore cloud that will damage players
     if Server then
    

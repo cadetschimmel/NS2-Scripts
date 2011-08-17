@@ -154,8 +154,9 @@ kMarineWeaponEffects =
             {viewmodel_cinematic = "cinematics/marine/rifle/muzzle_flash.cinematic", attach_point = "fxnode_riflemuzzle"},
             {weapon_cinematic = "cinematics/marine/rifle/muzzle_flash.cinematic", attach_point = "fxnode_riflemuzzle"},
 
-            {viewmodel_cinematic = "cinematics/marine/rifle/barrel_smoke.cinematic", attach_point = "fxnode_riflemuzzle"},
-            {weapon_cinematic = "cinematics/marine/rifle/barrel_smoke.cinematic", attach_point = "fxnode_riflemuzzle"},
+			// uncommented, causes FPS drops but effect is almost not visible
+            //{viewmodel_cinematic = "cinematics/marine/rifle/barrel_smoke.cinematic", attach_point = "fxnode_riflemuzzle"},
+            //{weapon_cinematic = "cinematics/marine/rifle/barrel_smoke.cinematic", attach_point = "fxnode_riflemuzzle"},
             
             // First-person and weapon shell casings
             {
@@ -267,6 +268,54 @@ kMarineWeaponEffects =
         },
     },   
     
+    shotgun_alt_attack = 
+    {
+        shotgunAltAttackEffects = 
+        {
+            {sound = "sound/ns2.fev/marine/shotgun/alt_fire", empty = false},
+            {viewmodel_animation = "attack", empty = false, force = true},
+            
+            {viewmodel_cinematic = "cinematics/marine/flamethrower/flame_1p.cinematic", attach_point = "fxnode_shotgunmuzzle"},
+            {weapon_cinematic = "cinematics/marine/shotgun/muzzle_flash.cinematic", attach_point = "fxnode_shotgunmuzzle"},
+
+            {viewmodel_cinematic = "cinematics/marine/shotgun/shell.cinematic", attach_point = "fxnode_shotguncasing", empty = false},            
+            {weapon_cinematic = "cinematics/marine/shotgun/shell.cinematic", attach_point = "fxnode_shotguncasing", empty = false},            
+
+        },
+
+        shotgunAltAttackEmptyEffects = 
+        {
+            {sound = "sound/ns2.fev/marine/shotgun/fire_last", empty = true},
+            {viewmodel_animation = "attack_last", empty = true, force = true},
+        },
+    },   
+    
+    shotgun_no_flechette =
+    {
+    	shotgunNoFlechetteEffects = 
+    	{
+    		{sound = "sound/ns2.fev/marine/common/empty"},    
+    	}
+    },
+    
+    flechette_detonate =
+    {
+    	flechetteDetonateEffects = 
+    	{
+    		{sound = "sound/ns2.fev/materials/metal/metal_scrape"},
+    		{cinematic = "cinematics/flechette.cinematic" }
+    	
+    	}
+    },
+    
+    flechette_on_target =
+    {
+    	flechetteOnTargetEffects = 
+    	{
+    		{cinematic = "cinematics/flechette_on_target.cinematic" }
+    	}
+    },
+    
     // Special shotgun reload effects
     shotgun_reload_start =
     {
@@ -344,7 +393,48 @@ kMarineWeaponEffects =
             {stop_sound = "sound/ns2.fev/marine/flamethrower/attack_loop"},
             {stop_sound = "sound/ns2.fev/marine/flamethrower/attack_start"},
             {sound = "sound/ns2.fev/marine/flamethrower/attack_end"},
-            {viewmodel_animation = "attack_end"}
+            {viewmodel_animation = "attack_end"},
+        },
+    },
+    
+    flames_small =
+    {
+        flameSmallEffects =
+        {
+            {cinematic = "cinematics/flame_small.cinematic", done = true},
+        },
+    },
+    
+    flames_middle =
+    {
+        flameMiddleEffects =
+        {
+            {cinematic = "cinematics/flame_middle.cinematic", done = true},
+        },
+    },
+    
+    flames_normal =
+    {
+        flameNormalEffects =
+        {
+            {cinematic = "cinematics/flame_normal.cinematic", done = true},
+        },
+    },    
+    
+    flame_bounce =
+    {
+        flameBounceEffects =
+        {
+            {cinematic = "cinematics/ember_smoke.cinematic", done = true},
+        },
+    },
+    
+    flame_end =
+    {
+        flameEndEffects =
+        {
+            {sound = "sound/ns2.fev/marine/flamethrower/attack_end"},
+            {cinematic = "cinematics/flame_end.cinematic", done = true},
         },
     },
 
@@ -375,7 +465,7 @@ kMarineWeaponEffects =
             {sound = "sound/ns2.fev/marine/common/explode"},
             {cinematic = "cinematics/materials/%s/grenade_explosion.cinematic"},
         },
-    },
+    }
 }
 
 GetEffectManager():AddEffectData("MarineWeaponEffects", kMarineWeaponEffects)

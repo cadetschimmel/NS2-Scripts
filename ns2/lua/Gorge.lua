@@ -10,8 +10,7 @@ Script.Load("lua/Utility.lua")
 Script.Load("lua/Alien.lua")
 Script.Load("lua/Weapons/Alien/SpitSpray.lua")
 Script.Load("lua/Weapons/Alien/InfestationAbility.lua")
-Script.Load("lua/Weapons/Alien/HydraAbility.lua")
-Script.Load("lua/Weapons/Alien/CystAbility.lua")
+Script.Load("lua/Weapons/Alien/DropStructureAbility.lua")
 Script.Load("lua/Weapons/Alien/BileBomb.lua")
 Script.Load("lua/Weapons/Alien/HarvesterAbility.lua")
 Script.Load("lua/Weapons/Alien/Absorb.lua")
@@ -404,7 +403,7 @@ function Gorge:GetMaxSpeed()
     end
 
     speed = Gorge.kMaxGroundSpeed
-    
+   
     if self:GetIsSliding() then
     
         speed = Gorge.kMaxSlidingSpeed
@@ -525,11 +524,11 @@ function Gorge:UpdateHelp()
         return true
     elseif self:AddTooltipOnce("Press left-click to spit and right-click to heal players or structures.") then
         return true
-    elseif activeWeaponName ~= "HydraAbility" and self:AddTooltipOnce("Switch to weapon #2 to build hydras that attack enemies.") then
+    elseif activeWeaponName ~= "DropStructureAbility" and self:AddTooltipOnce("Switch to weapon #4 to build structures.") then
         return true       
-    elseif activeWeaponName == "HydraAbility" and self:AddTooltipOnce("Building a Hydra costs you resources, but you can build as many as you like.") then
+    elseif activeWeaponName == "DropStructureAbility" and self:AddTooltipOnce("Building a Structure costs you resources, but you can build as many as you like.") then
         return true       
-    elseif activeWeaponName == "HydraAbility" and self:AddTooltipOnce("Hydras can even be built on walls and ceilings!") then
+    elseif activeWeaponName == "DropStructureAbility" and self:AddTooltipOnce("Structures can usually be built on walls and ceilings!") then
         return true       
     elseif self:AddTooltipOnce("Hold shift while moving belly slide!") then
         return true

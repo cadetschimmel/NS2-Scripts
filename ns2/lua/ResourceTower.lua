@@ -16,6 +16,8 @@ ResourceTower.kMapName = "resourcetower"
 ResourceTower.kResourcesInjection = kPlayerResPerInterval
 ResourceTower.kTeamResourcesInjection = 1
 ResourceTower.kMaxUpgradeLevel = 3
+ResourceTower.kMaxTechPointMultiplier = 4
+ResourceTower.kTechNodeValue = .8
 
 // Don't start generating resources right away, wait a short time
 // (but not too long or it will feel like a bug). This is to 
@@ -49,12 +51,28 @@ function ResourceTower:SetUpgradeLevel(upgradeLevel)
     self.upgradeLevel = Clamp(upgradeLevel, 0, ResourceTower.kMaxUpgradeLevel)
 end
 
+function ResourceTower:GetNumCapturedTechPoints()
+
+	local tp = nil
+	
+	if (self:GetTeamNumber() == kTeam1Index) then
+    	tp = GetEntitiesForTeam("CommandStation", self:GetTeamNumber())
+	else
+		tp = GetEntitiesForTeam("Hive", self:GetTeamNumber())
+	end
+	
+    return Clamp(table.count(tp), 1, ResourceTower.kMaxTechPointMultiplier)
+
+end
+
 function ResourceTower:GiveResourcesToTeam(player)
 
-    local resources = ResourceTower.kResourcesInjection * (1 + self:GetUpgradeLevel() * kResourceUpgradeAmount)
+    local resources = ResourceTower.kResourcesInjection * Clamp(self:GetNumCapturedTechPoints() * ResourceTower.kTechNodeValue, 1, ResourceTower.kMaxTechPointMultiplier)
     player:AddResources(resources, true)
 
 end
+
+
 
 /*
 function ResourceTower:GetDescription()

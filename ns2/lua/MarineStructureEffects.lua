@@ -514,6 +514,26 @@ kMarineStructureEffects =
             {stop_sound = "sound/ns2.fev/marine/common/distress_beacon"},
         },
     },
+    
+    power_pack_charge =
+    {
+    	powerPackChargeEffect =
+    	{
+    	    {cinematic = "cinematics/marine/observatory/glowing_light_effect.cinematic"},
+            {sound = "sound/ns2.fev/marine/structures/power_up"},
+    	}
+    
+    },
+    
+    power_pack_shock =
+    {
+    	powerPackChargeEffect =
+    	{
+            {cinematic = "cinematics/marine/infantryportal/player_spawn.cinematic"},
+            {sound = "sound/ns2.fev/marine/structures/infantry_portal_player_spawn"},
+    	}
+    
+    },
 
 }
 

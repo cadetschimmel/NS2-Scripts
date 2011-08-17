@@ -29,7 +29,11 @@ StabBlink.kRange = 3
 StabBlink.kStabDuration = 1
 
 function StabBlink:GetPrimaryEnergyCost(player)
-    return StabBlink.kPrimaryEnergyCost
+    return self:ApplyEnergyCostModifier(StabBlink.kPrimaryEnergyCost, player)
+end
+
+function StabBlink:GetEnergyCost(player)
+    return self:ApplyEnergyCostModifier(StabBlink.kPrimaryEnergyCost, player)
 end
 
 function StabBlink:GetHUDSlot()

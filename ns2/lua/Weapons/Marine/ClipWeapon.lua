@@ -17,7 +17,7 @@ ClipWeapon.kMapName = "clipweapon"
 
 local networkVars =
 {
-    ammo = "integer (0 to 255)",
+    ammo = "integer (0 to 300)",
     clip = "integer (0 to 200)",
     
     reloadTime = "float",
@@ -424,9 +424,15 @@ function ClipWeapon:ApplyBulletGameplayEffects(player, target, endPoint, directi
 
     if(Server) then
     
-        if target:isa("LiveScriptActor") then
+        if target:isa("LiveScriptActor") and GetGamerules():CanEntityDoDamageTo(player, target) then
         
-            target:TakeDamage(self:GetBulletDamage(target, endPoint), player, self, endPoint, direction)
+            local damage = self:GetBulletDamage(target, endPoint)
+            
+            if target.GetZoneDamage then
+                damage = target:GetZoneDamage(damage, endPoint)
+            end
+    
+            target:TakeDamage(damage, player, self, endPoint, direction)
             
         end
     

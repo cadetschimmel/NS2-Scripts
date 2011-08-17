@@ -5,17 +5,11 @@
 //    Created by:   Charlie Cleveland (charlie@unknownworlds.com) and
 //                  Max McGuire (max@unknownworlds.com)
 //
-// Role: Surgical striker, harassment
-//
-// The Fade should be a fragile, deadly-sharp knife. Wielded properly, it's force is undeniable. But
-// used clumsily or without care will only hurt the user. Make sure Fade isn't better than the Skulk 
-// in every way (notably, vs. Structures). To harass, he must be able to stay out in the field
-// without continually healing at base, and needs to be able to use blink often.
-//
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Utility.lua")
 Script.Load("lua/Weapons/Alien/SwipeBlink.lua")
 Script.Load("lua/Weapons/Alien/StabBlink.lua")
+Script.Load("lua/Weapons/Alien/SwipeFetch.lua")
 Script.Load("lua/Alien.lua")
 Script.Load("lua/Mixins/GroundMoveMixin.lua")
 Script.Load("lua/Mixins/CameraHolderMixin.lua")
@@ -46,7 +40,14 @@ Fade.kJumpHeight = 1
 Fade.kMaxSpeed = 6.5
 Fade.kStabSpeed = .5
 Fade.kEtherealSpeed = 20
-Fade.kEtherealAcceleration = 60
+Fade.kFetchSpeed = 5
+Fade.kAcceleration = 52
+Fade.kEtherealAcceleration = 80
+
+Fade.kFadeLeapSpeed = 35
+Fade.kStartFadeLeapForce = 55
+Fade.kFadeLeapIntervall = 1.3
+Fade.kFadeLeapDuration = 0.09
 
 if(Server) then
     Script.Load("lua/Fade_Server.lua")
@@ -56,7 +57,9 @@ Fade.kBlinkState = enum( {'Normal', 'BlinkOut', 'BlinkIn'} )
 
 Fade.networkVars =
 {
-    blinkModifier    = "boolean",
+    isethereal    = "boolean",
+    lastFadeLeap	 = "float",
+    fadeLeap		 = "boolean"
 }
 
 PrepareClassForMixin(Fade, GroundMoveMixin)
@@ -64,6 +67,29 @@ PrepareClassForMixin(Fade, CameraHolderMixin)
 
 function Fade:GetTauntSound()
     return Fade.kTauntSound
+end
+
+if Client then
+
+	function Fade:GetSpecialCooldown()
+	
+		return Shared.GetTime() - (self.lastFadeLeap + Fade.kFadeLeapIntervall)
+	
+	end
+	
+end
+
+if Client then
+function Fade:IsSameDimension()
+	
+	if  Client.GetLocalPlayer():GetIsEthereal() or Client.GetLocalPlayer():isa("Fade") then 
+		return true
+	end
+	
+	// only visible for same dimension
+	return not self.isethereal
+
+end
 end
 
 function Fade:OnInit()
@@ -74,8 +100,10 @@ function Fade:OnInit()
     Alien.OnInit(self)
     
     self.blinkState = Fade.kBlinkState.Normal
-    self.blinkModifier = false
+    self.isethereal = false
     self.desiredMove = Vector()
+    self.lastFadeLeap = 0
+    self.fadeLeap = false
     
 end
 
@@ -103,43 +131,178 @@ function Fade:GetViewModelName()
     return Fade.kViewModelName
 end
 
-function Fade:UpdateButtons(input)
+function Fade:HandleButtons(input)
 
     Alien.HandleButtons(self, input)
     
-    self.blinkModifier = (bit.band(input.commands, Move.MovementModifier) ~= 0)
+    //self.isethereal = (bit.band(input.commands, Move.MovementModifier) ~= 0)
+    self:UpdateFadeLeaping(input)
     
 end
 
+function Fade:GetAcceleration()
+	if self:GetIsEthereal() then
+		return Fade.kEtherealAcceleration
+	elseif self.fadeLeap then
+		return Fade.kStartFadeLeapForce
+	else
+		return Fade.kAcceleration
+	end
+end
+
+/*
+function Fade:PreUpdateMove(input, runningPrediction)
+
+    PROFILE("Fade:PreUpdateMove")
+
+    if self:GetIsEthereal() or self.fadeLeap then
+        local move = GetNormalizedVector( input.move )
+        local viewCoords = self:GetViewAngles():GetCoords()            
+        local redirectDir = viewCoords:TransformVector( move )
+        
+        redirectDir.y = redirectDir.y * 0.4      
+        
+        if (move:GetLength() ~= 0) then
+            self:SetVelocity(redirectDir * self:GetAcceleration())
+        end
+    end
+    
+end
+*/
+
 function Fade:GetFrictionForce(input, velocity)
     if self:GetIsEthereal() then
-        return Vector(0, 0, 0)
+        if (input.move:GetLength() == 0) then
+            return Vector(-velocity.x, -velocity.y, -velocity.z) * 4
+        end
     end
     return Alien.GetFrictionForce(self, input, velocity)
 end
 
-function Fade:GetBlinkModifier()
-    return self.blinkModifier
+function Fade:Getisethereal()
+    return self.isethereal
 end
 
 function Fade:ConstrainMoveVelocity(moveVelocity)
     
-    if not self:GetIsEthereal() then
+    if not self:GetIsEthereal() or not self.fadeLeap then
         Alien.ConstrainMoveVelocity(self, moveVelocity)
     end
     
 end
 
-function Fade:ModifyVelocity(input, velocity)   
+function Fade:GetDesiredFadeLeaping(input)
 
-    if not self:GetIsEthereal() then
-        Alien.ModifyVelocity(self, input, velocity)
+    local desiredFadeLeaping = (bit.band(input.commands, Move.MovementModifier) ~= 0) and (not self.crouching) and self:GetVelocity():GetLengthXZ() > 1
+    
+    // Not allowed to start leaping while in the air
+    if (not self:GetIsOnGround() and desiredFadeLeaping and self.mode == kPlayerMode.Default) then
+        desiredFadeLeaping = false
     end
+    
+    return desiredFadeLeaping
+
+end
+
+function Fade:UpdateFadeLeaping(input)
+
+	local desiredFadeLeaping = self:GetDesiredFadeLeaping(input)
+	
+	if desiredFadeLeaping and ((Shared.GetTime() - self.lastFadeLeap) > self.kFadeLeapIntervall)  then
+		
+		// For modifying velocity
+		self.fadeLeap = true
+	
+	end
+	
+
+end
+
+function Fade:ClampSpeed(input, velocity)
+
+	PROFILE("Fade:ClampSpeed")
+
+	if self:GetIsFetching() then
+	
+	    // Only clamp XZ speed so it feels better
+	    local moveSpeedXZ = velocity:GetLengthXZ()        
+	    local maxSpeed = self:GetMaxSpeed()
+	    
+	    // Players moving backwards can't go full speed    
+	    if input.move.z > 0 then
+	    
+	        maxSpeed = 2
+	        
+	    end
+	    
+	    if (moveSpeedXZ > maxSpeed) then
+	    
+	        local velocityY = velocity.y
+	        velocity:Scale( maxSpeed / moveSpeedXZ )
+	        velocity.y = velocityY
+	        
+	    end 
+	    
+	    return velocity
+	
+	else
+		return Alien.ClampSpeed(self, input, velocity)
+	end
+
+end
+
+
+function Fade:ModifyVelocity(input, velocity)   
+	
+		
+    if not self:GetIsEthereal() then        
+	
+		Alien.ModifyVelocity(self, input, velocity)
+
+    	// Give a little push forward
+    	if self.fadeLeap then
+    		
+	        local pushDirection = GetNormalizedVector(self:GetVelocity())
+	        local impulse = pushDirection * Fade.kStartFadeLeapForce
+	
+	        velocity.x = velocity.x + impulse.x
+	        velocity.y = velocity.y + impulse.y
+	        velocity.z = velocity.z + impulse.z
+	        
+	        self.fadeLeap = false
+	        self.lastFadeLeap = Shared.GetTime()
+	        self:SetVelocity(velocity)
+	        
+	        // Copied particle effect from blink
+		    if not Shared.GetIsRunningPrediction() then
+		        self:TriggerEffects("fade_leap", {effecthostcoords = Coords.GetTranslation(self:GetEyePos() - Vector(0, 1, 0))})
+		        if Client and Client.GetLocalPlayer():GetId() == player:GetId() then
+		            self:TriggerEffects("fade_leap_local", {effecthostcoords = Coords.GetTranslation(self:GetEyePos())})
+		        end
+		        
+		        //self:SetAnimAndMode(Fade.kBlinkOutAnim, kPlayerMode.FadeBlinkOut)
+		    end
+
+        end
+	elseif self:GetIsBlinking() then		
+		
+		local move = GetNormalizedVector( input.move )		
+		
+		if (move:GetLength() ~= 0) then 			
+			local viewCoords = self:GetViewAngles():GetCoords()					
+			local redirectDir = viewCoords:TransformVector( move )
+			local newVelocity = velocity + redirectDir * input.time * Fade.kEtherealAcceleration
+			
+			velocity.x = newVelocity.x	
+			velocity.y = redirectDir.y * velocity:GetLength()
+			velocity.z = newVelocity.z		
+		end		
+    end  
     
 end
 
 function Fade:GetIsOnGround()
-    if self:GetIsEthereal() then
+    if self:GetIsEthereal() or self.fadeLeap then
         return false
     end
     return Alien.GetIsOnGround(self)
@@ -154,8 +317,16 @@ end
 
 function Fade:GetIsEthereal()
 
+	return self:GetIsBlinking() or self:GetIsFetching()
+    //local weapon = self:GetActiveWeapon()
+    //return (weapon and weapon.GetEthereal and weapon:GetEthereal())
+    
+end
+
+function Fade:GetIsFetching()
+
     local weapon = self:GetActiveWeapon()
-    return (weapon ~= nil and weapon:isa("Blink") and weapon:GetEthereal())
+    return (weapon ~= nil and weapon:isa("Fetch") and weapon:GetEthereal())
     
 end
 
@@ -167,8 +338,16 @@ function Fade:GetMaxSpeed()
     end
 
     // Ethereal Fades move very quickly
-    if self:GetIsEthereal() then
+    if self:GetIsBlinking() then
         return Fade.kEtherealSpeed
+    end
+    
+    if self:GetIsFadeLeaping() then
+    	return Fade.kFadeLeapSpeed
+    end
+    
+    if self:GetIsFetching() then
+        return Fade.kFetchSpeed
     end
 
     local baseSpeed = Fade.kMaxSpeed    
@@ -179,6 +358,14 @@ function Fade:GetMaxSpeed()
     // Take into account crouching
     return ( 1 - self:GetCrouchAmount() * Player.kCrouchSpeedScalar ) * baseSpeed * self:GetSlowSpeedModifier()
 
+end
+
+function Fade:GetIsFadeLeaping()
+	if (Shared.GetTime() - self.lastFadeLeap) < (self.kFadeLeapDuration) then
+		return true
+	else
+		return false
+	end
 end
 
 function Fade:GetMass()

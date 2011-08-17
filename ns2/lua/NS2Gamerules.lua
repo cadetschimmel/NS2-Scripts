@@ -135,6 +135,16 @@ function NS2Gamerules:CanEntityDoDamageTo(attacker, target)
     if not target:isa("LiveScriptActor") then
         return false
     end
+    
+    if attacker and target and attacker:isa("Player") and target:isa("Player") then
+    	if target:GetIsEthereal() then
+        	if attacker:GetIsEthereal() then 
+        		return true
+    		else
+    			return false
+			end
+    	end
+    end
 
     if (not target:GetCanTakeDamage()) then
         return false
@@ -213,7 +223,14 @@ function NS2Gamerules:ComputeDamageFromType(damage, damageType, entity)
             damage = 0
         end        
         
+    elseif damageType == kDamageType.Normal or damageType == kDamageType.Heavy then 
+
+        if entity:isa("Whip") then
+            // absorption in my understanding means substraction from incoming damage
+            damage = damage - (damage * kWhipAbsorption)
+        end
     end
+        
     
     return damage
     
@@ -307,6 +324,7 @@ function NS2Gamerules:OnEntityChange(oldId, newId)
     self.team1:OnEntityChange(oldId, newId)
     self.team2:OnEntityChange(oldId, newId)
     self.spectatorTeam:OnEntityChange(oldId, newId)
+    Server.targetCache:OnEntityChange(oldId, newId)
 
     // Keep server map entities up to date    
     local index = table.find(Server.mapLoadLiveEntityValues, oldId)
@@ -379,6 +397,8 @@ function NS2Gamerules:OnKill(targetEntity, damage, attacker, doer, point, direct
     self.worldTeam:OnKill(targetEntity, damage, attacker, doer, point, direction)
     self.spectatorTeam:OnKill(targetEntity, damage, attacker, doer, point, direction)
     
+    Server.targetCache:OnKill(targetEntity)
+    
 end
 
 // Find team start with team 0 or for specified team. Remove it from the list so other teams don't start there. Return nil if there are none.
@@ -443,7 +463,7 @@ function NS2Gamerules:GetUpgradedDamage(attacker, doer, damage, damageType)
         end
         
         // Alien melee upgrades
-        if doer:isa("BiteLeap") or doer:isa("SwipeBlink") or doer:isa("Gore") then
+        if attacker and attacker:isa("Alien") then
         
             if(GetTechSupported(attacker, kTechId.Melee3Tech, true)) then
             
@@ -457,8 +477,7 @@ function NS2Gamerules:GetUpgradedDamage(attacker, doer, damage, damageType)
             
                 damageScalar = kMelee1DamageScalar
                 
-            end
-            
+        	end
         end
         
         // Add more if under influence of whip. This looks like it should be revisited.
@@ -644,8 +663,8 @@ function NS2Gamerules:UpdateScores()
             
                 // If any value has changed then we also want to update the internal score
                 // so we can update steams player info.
-                Server.UpdatePlayerInfo(fromPlayer, fromPlayer:GetName(), fromPlayer:GetScore())
-                
+                Server.UpdatePlayerInfo(fromPlayer, fromPlayer:GetName(), fromPlayer:GetScore())                   
+            
                 if(fromPlayer:GetName() ~= "") then
                 
                     // Now send scoreboard info to everyone, including fromPlayer     

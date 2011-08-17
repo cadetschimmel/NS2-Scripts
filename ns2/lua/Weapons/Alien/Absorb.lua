@@ -28,11 +28,11 @@ Absorb.kSecondaryEnergyCost = 20
 Absorb.kSecondaryAttackDelay = 3         
 
 function Absorb:GetPrimaryEnergyCost(player)
-    return Absorb.kPrimaryEnergyCost
+    return self:ApplyEnergyCostModifier(Absorb.kPrimaryEnergyCost, player)
 end
 
 function Absorb:GetSecondaryEnergyCost(player)
-    return Absorb.kSecondaryEnergyCost
+    return self:ApplyEnergyCostModifier(Absorb.kSecondaryEnergyCost, player)
 end
 
 function Absorb:GetPrimaryAttackDelay()

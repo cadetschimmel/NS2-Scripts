@@ -129,7 +129,7 @@ function Armory:GetTechButtons(techId)
     
     if(techId == kTechId.RootMenu) then 
     
-        techButtons = { kTechId.ShotgunTech, kTechId.GrenadeLauncherTech, kTechId.FlamethrowerTech, kTechId.None,
+        techButtons = { kTechId.ExtendedRifleTech, kTechId.ShotgunTech, kTechId.GrenadeLauncherTech, kTechId.FlamethrowerTech, 
                         kTechId.None, kTechId.None, kTechId.None, kTechId.None }
     
         // Show button to upgraded to advanced armory

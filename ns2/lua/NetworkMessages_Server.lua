@@ -31,6 +31,17 @@ function OnCommandCommClickSelect(client, message)
 
 end
 
+function OnCommandCommSelectId(client, message)
+
+    local player = client:GetControllingPlayer()
+    if(player:GetIsCommander()) then
+    
+        player:SelectEntityId(ParseSelectIdMessage(message))
+        
+    end
+
+end
+
 function OnCommandCommControlClickSelect(client, message)
 
     local player = client:GetControllingPlayer()
@@ -113,3 +124,4 @@ Server.HookNetworkMessage("CommTargetedAction",         OnCommandCommTargetedAct
 Server.HookNetworkMessage("CommTargetedActionWorld",    OnCommandCommTargetedActionWorld)
 Server.HookNetworkMessage("ExecuteSaying",              OnCommandExecuteSaying)
 Server.HookNetworkMessage("MutePlayer",                 OnCommandMutePlayer)
+Server.HookNetworkMessage("SelectId",               	OnCommandCommSelectId)

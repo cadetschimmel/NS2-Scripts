@@ -275,6 +275,7 @@ function CommandStructure:Logout()
         local previousArmor = self.commander.previousArmor
         local previousAlienEnergy = self.commander.previousAlienEnergy
         local timeStartedCommanderMode = self.commander.timeStartedCommanderMode
+		local hasJetpack = self.commander.hasJetpack
         
         local player = self.commander:Replace(self.commander.previousMapName, self.commander:GetTeamNumber(), true)    
 
@@ -292,6 +293,11 @@ function CommandStructure:Logout()
             local timePassedSinceStartedComm = Shared.GetTime() - timeStartedCommanderMode
             player:SetEnergy(previousAlienEnergy + Alien.kEnergyRecuperationRate * timePassedSinceStartedComm)
         end
+		
+		// give back jetpack if player had one before entering comm mode
+		if hasJetpack then
+			player:GiveJetpack()
+		end
 
         self.commander = nil
         self.commanderId = Entity.invalidId

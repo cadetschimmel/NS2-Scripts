@@ -19,7 +19,7 @@ Ability.kMaxEnergy = 100
 // The order of icons in kHUDAbilitiesTexture, used by GetIconOffsetY.
 // These are just the rows, the colum is determined by primary or secondary
 // The 0th row is the unknown (?) icon
-kAbilityOffset = enum( {'Bite', 'Parasite', 'Spit', 'Infestation', 'Spikes', 'Sniper', 'Spores', 'SwipeBlink', 'StabBlink', 'Blink', 'Hydra', 'Gore', 'BoneShield', 'Stomp', 'Charge', 'BileBomb'} )
+kAbilityOffset = enum( {'Bite', 'Parasite', 'Spit', 'Infestation', 'Spikes', 'Sniper', 'Spores', 'SwipeBlink', 'StabBlink', 'Blink', 'Hydra', 'SwipeFetch', 'Gore', 'BoneShield', 'Stomp', 'Charge', 'BileBomb'} )
 
 // Override these
 function Ability:GetPrimaryAttackDelay()
@@ -28,7 +28,24 @@ end
 
 // Return 0-100 energy cost (where 100 is full energy bar)
 function Ability:GetEnergyCost(player)
-    return Ability.kEnergyCost
+    return self:ApplyEnergyCostModifier(1, player)
+end
+
+function Ability:ApplyEnergyCostModifier(energyCost, player)
+
+	// not sure how to get the correct "player" if its not provided, so here is the protective hack
+	if player ~= nil then
+	    if player:GetGameEffectMask(kGameEffect.OnFire) then
+	        energyCost = energyCost * kOnFireEnergyCostScalar
+	    end
+		
+	    if player:GetGameEffectMask(kGameEffect.OnPrimalScream) then
+	        energyCost = energyCost * kOnPrimalScreamEnergyCostScalar
+	    end
+    end
+
+    return energyCost
+
 end
 
 function Ability:GetHasSecondary(player)
@@ -51,6 +68,7 @@ end
 function Ability:GetInterfaceData(secondary, inactive)
 
     local parent = self:GetParent()
+    
     // It is possible there will be a time when there isn't a parent due to how Entities are destroyed and unparented.
     if parent then
         local vis = (inactive and parent:GetInactiveVisible()) or (not inactive) //(parent:GetEnergy() ~= Ability.kMaxEnergy)
@@ -61,13 +79,13 @@ function Ability:GetInterfaceData(secondary, inactive)
         
         // Inactive abilities return only xoff, yoff, hud slot
         if inactive then
-            return {self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), hudSlot}
+            return {self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), hudSlot, self:CanUseWeapon(parent)}
         else
         
             if secondary then
-                return {parent:GetEnergy()/Ability.kMaxEnergy, self:GetSecondaryEnergyCost()/Ability.kMaxEnergy, self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), vis, hudSlot}
+                return {parent:GetEnergy()/Ability.kMaxEnergy, self:GetSecondaryEnergyCost()/Ability.kMaxEnergy, self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), vis, hudSlot, self:CanUseWeapon(parent)}
             else
-                return {parent:GetEnergy()/Ability.kMaxEnergy, self:GetEnergyCost()/Ability.kMaxEnergy, self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), vis, hudSlot}
+                return {parent:GetEnergy()/Ability.kMaxEnergy, self:GetEnergyCost(parent)/Ability.kMaxEnergy, self:GetIconOffsetX(secondary), self:GetIconOffsetY(secondary), vis, hudSlot, self:CanUseWeapon(parent)}
             end
             
         end
@@ -120,7 +138,7 @@ end
 // Child class can override
 function Ability:OnPrimaryAttack(player)
 
-    if self:GetPrimaryAttackAllowed() and (not self:GetPrimaryAttackRequiresPress() or not player:GetPrimaryAttackLastFrame()) then
+    if self:GetPrimaryAttackAllowed(player) and (not self:GetPrimaryAttackRequiresPress() or not player:GetPrimaryAttackLastFrame()) then
     
         // Check energy cost
         local energyCost = self:GetEnergyCost(player)

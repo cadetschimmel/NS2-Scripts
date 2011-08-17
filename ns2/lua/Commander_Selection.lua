@@ -200,7 +200,7 @@ function Commander:InternalClickSelectEntities(pickVec)
     
     if trace.entity ~= nil and self:GetIsEntityValidForSelection(trace.entity) then
     
-        return {trace.entity}            
+        return {trace.entity}
         
     end
     
@@ -250,6 +250,19 @@ function Commander:GetUnitIdUnderCursor(pickVec)
 
 end
 
+function Commander:SelectEntityId(entitId)
+
+	return self:InternalSetSelection({ {entitId, Shared.GetTime()} } )
+
+end
+
+// TODO: call when selection should be added to current selection
+function Commander:AddSelectEntityId(entitId)
+
+	return self:InternalSetSelection({ {entitId, Shared.GetTime()} } )
+
+end
+
 function Commander:ClickSelectEntities(pickVec)
 
     local newSelection = {}
@@ -261,6 +274,10 @@ function Commander:ClickSelectEntities(pickVec)
         for index, entity in ipairs(clickEntities) do  
         
             table.insertunique(newSelection, {entity:GetId(), Shared.GetTime()} )
+            
+            if Client then
+            	self:SendSelectIdCommand(entity:GetId())
+            end
             
         end
         
@@ -575,7 +592,7 @@ function Commander:UpdateSelection(deltaTime)
             
         end
         
-    end
+    end    
     
     // Recompute our sub-group
     self.selectedSubGroupEntityIds = self:GetSelectedSubGroup()

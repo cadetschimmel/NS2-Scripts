@@ -12,6 +12,7 @@
 Script.Load("lua/Structure.lua")
 Script.Load("lua/DoorMixin.lua")
 Script.Load("lua/InfestationMixin.lua")
+Script.Load("lua/WhipBomb.lua")
 
 class 'Whip' (Structure)
 
@@ -36,7 +37,7 @@ Whip.kFuryDuration = 6
 Whip.kFuryDamageBoost = .1          // 10% extra damage
 
 // Movement state - for uprooting and moving!
-Whip.kMode = enum( {'Rooted', 'Unrooting', 'UnrootedStationary', 'Rooting', 'StartMoving', 'Moving', 'EndMoving'} )
+Whip.kMode = enum( {'Rooted', 'Unrooting', 'UnrootedStationary', 'Rooting', 'StartMoving', 'Moving', 'EndMoving', 'Bombarding' } )
 
 local networkVars =
 {
@@ -44,6 +45,7 @@ local networkVars =
     
     mode = "enum Whip.kMode",
     desiredMode = "enum Whip.kMode",
+    bombTarget = "vector"
 }
 
 if Server then
@@ -71,11 +73,12 @@ function Whip:OnInit()
     self:SetUpdates(true)
  
     if Server then    
-        self.targetSelector = TargetSelector():Init(
+        self.targetSelector = Server.targetCache:CreateSelector(
                 self,
                 Whip.kRange,
                 true, 
-                { kAlienStaticTargets, kAlienMobileTargets })      
+                TargetCache.kAmtl, 
+                TargetCache.kAstl)
     end
    
 end
@@ -83,12 +86,6 @@ end
 // Used for targeting
 function Whip:GetFov()
     return Whip.kFov
-end
-/**
- * Put the eye up roughly 180 cm.
- */
-function Whip:GetViewOffset()
-    return self:GetCoords().yAxis * 1.8
 end
 
 function Whip:GetIsAlienStructure()
@@ -99,33 +96,45 @@ function Whip:GetDeathIconIndex()
     return kDeathMessageIcon.Whip
 end
 
+function Whip:GetStatusDescription()
+	local text, scalar = Structure.GetStatusDescription(self)
+	if self.mode == Whip.kMode.Bombarding then
+		text = "Reloading"
+	end
+
+	return text, scalar
+end
+
 function Whip:GetTechButtons(techId)
 
     local techButtons = nil
     
-    if(techId == kTechId.RootMenu) then 
+    if(techId == kTechId.RootMenu) then
     
-        techButtons = { kTechId.UpgradesMenu, kTechId.WhipFury, kTechId.None, kTechId.Attack }
-        
-        // Allow structure to be ugpraded to mature version
-        local upgradeIndex = table.maxn(techButtons) + 1
-        
-        if(self:GetTechId() == kTechId.Whip) then
-            techButtons[upgradeIndex] = kTechId.UpgradeWhip
+    	techButtons = { kTechId.None, kTechId.None, kTechId.None, kTechId.None,
+    					kTechId.None, kTechId.None, kTechId.None, kTechId.None,
+    					kTechId.None, kTechId.None, kTechId.None, kTechId.None  }
+    					
+    	if(self:GetTechId() == kTechId.Whip) then
+            techButtons[1] = kTechId.UpgradeWhip
         else
-            techButtons[upgradeIndex] = kTechId.WhipBombard
+        	techButtons[1] = kTechId.WhipBombard   
+        end
+    
+    	techButtons[2] = kTechId.WhipFury
+    	techButtons[3] = kTechId.Attack
+    	
+    	if self.mode == Whip.kMode.Rooted then
+	    	techButtons[9] = kTechId.FrenzyTech
+	        techButtons[10] = kTechId.SwarmTech
         end
         
-        local rootActionIndex = table.maxn(techButtons) + 1
-        if self.mode == Whip.kMode.Rooted then
-            techButtons[rootActionIndex] = kTechId.WhipUnroot
+        if self.mode == Whip.kMode.Rooted or self.mode == Whip.kMode.Bombarding then        
+            techButtons[5] = kTechId.WhipUnroot
         elseif self.mode == Whip.kMode.UnrootedStationary or self.mode == Whip.kMode.StartMoving or self.mode == Whip.kMode.Moving or self.mode == Whip.kMode.EndMoving then
-            techButtons[rootActionIndex] = kTechId.WhipRoot
+            techButtons[5] = kTechId.WhipRoot
         end
-       
-    elseif(techId == kTechId.UpgradesMenu) then 
-        techButtons = {kTechId.Melee1Tech, kTechId.Melee2Tech, kTechId.Melee3Tech, kTechId.None, kTechId.FrenzyTech, kTechId.SwarmTech, kTechId.BileBombTech }
-        techButtons[kAlienBackButtonIndex] = kTechId.RootMenu
+        
     end
     
     return techButtons
@@ -140,9 +149,9 @@ function Whip:GetActivationTechAllowed(techId)
         return self:GetIsBuilt() and (self.mode == Whip.kMode.Rooted)
     elseif techId == kTechId.UpgradeWhip then
         return self:GetIsBuilt() and not self:isa("MatureWhip") and (self.mode == Whip.kMode.Rooted)
-    end
-
-    return true
+    else 
+		return self:GetIsBuilt() and (self.mode == Whip.kMode.Rooted)
+	end
         
 end
 

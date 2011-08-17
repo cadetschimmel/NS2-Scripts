@@ -176,7 +176,7 @@ function MarineTeam:Update(timePassed)
     
     // Update distress beacon mask
     self:UpdateGameMasks(timePassed)
-    
+
 end
 
 function MarineTeam:InitTechTree()
@@ -193,19 +193,24 @@ function MarineTeam:InitTechTree()
     self.techTree:AddUpgradeNode(kTechId.ExtractorUpgrade,        kTechId.Extractor,           kTechId.None)
     self.techTree:AddBuildNode(kTechId.InfantryPortal,            kTechId.None,                kTechId.None)
     self.techTree:AddBuildNode(kTechId.Sentry,                    kTechId.RoboticsFactory,     kTechId.None)
-    self.techTree:AddPlasmaManufactureNode(kTechId.SentryRefill,  kTechId.Sentry,              kTechId.None)
+    self.techTree:AddTargetedActivation(kTechId.SentryAmmo,  	  kTechId.Armory,              kTechId.None)
     self.techTree:AddBuildNode(kTechId.Armory,                    kTechId.None,                kTechId.None)  
-    self.techTree:AddBuildNode(kTechId.ArmsLab,                   kTechId.Armory,              kTechId.None)  
+    self.techTree:AddBuildNode(kTechId.ArmsLab,                   kTechId.InfantryPortal,      kTechId.None)  
     self.techTree:AddManufactureNode(kTechId.MAC,                 kTechId.RoboticsFactory,     kTechId.None)
     
-    self.techTree:AddTargetedBuyNode(kTechId.MedPack,             kTechId.Armory,              kTechId.None)
-    self.techTree:AddTargetedBuyNode(kTechId.AmmoPack,            kTechId.None,                kTechId.None)
+    self.techTree:AddBuildNode(kTechId.MedPack,             kTechId.Armory,              kTechId.None)
+    self.techTree:AddBuildNode(kTechId.AmmoPack,            kTechId.Armory,                kTechId.None)
     self.techTree:AddResearchNode(kTechId.CatPackTech,            kTechId.Armory,              kTechId.None)
-    self.techTree:AddTargetedBuyNode(kTechId.CatPack,             kTechId.Armory,              kTechId.CatPackTech)
+    self.techTree:AddBuildNode(kTechId.CatPack,             kTechId.Armory,              kTechId.CatPackTech)
     self.techTree:AddBuyNode(kTechId.Axe,                         kTechId.None,                kTechId.None)
     self.techTree:AddBuyNode(kTechId.Pistol,                      kTechId.None,                kTechId.None)
     self.techTree:AddBuyNode(kTechId.Rifle,                       kTechId.None,                kTechId.None)
     self.techTree:AddResearchNode(kTechId.MACWeldingTech,           kTechId.Armory,              kTechId.None)
+    
+    // for direct supply
+    self.techTree:AddManufactureNode(kTechId.SupplyMed, kTechId.Armory, kTechId.None)
+    self.techTree:AddManufactureNode(kTechId.SupplyAmmo, kTechId.Armory, kTechId.None)
+    self.techTree:AddManufactureNode(kTechId.SupplyCat, kTechId.Armory, kTechId.CatPackTech)
     
     // Squad tech nodes
     self.techTree:AddOrder(kTechId.SelectRedSquad)
@@ -227,8 +232,8 @@ function MarineTeam:InitTechTree()
     self.techTree:AddMenu(kTechId.CommandStationUpgradesMenu)
     
     // Armory upgrades
-    self.techTree:AddResearchNode(kTechId.RifleUpgradeTech,       kTechId.Armory,              kTechId.None)
-    self.techTree:AddBuyNode(kTechId.RifleUpgrade, kTechId.RifleUpgradeTech, kTechId.None, kTechId.Rifle)
+    self.techTree:AddResearchNode(kTechId.ExtendedRifleTech,       kTechId.Armory,              kTechId.None)
+    self.techTree:AddBuyNode(kTechId.ExtendedRifle, kTechId.ExtendedRifleTech, kTechId.None, kTechId.Rifle)
     
     self.techTree:AddMenu(kTechId.ArmsLabUpgradesMenu)
     //self.techTree:AddMenu(kTechId.ArmoryEquipmentMenu)
@@ -236,7 +241,9 @@ function MarineTeam:InitTechTree()
     self.techTree:AddUpgradeNode(kTechId.AdvancedArmoryUpgrade,  kTechId.Armory,        kTechId.InfantryPortal)
     
     self.techTree:AddResearchNode(kTechId.Armor1,                 kTechId.Armory,              kTechId.None)
-    self.techTree:AddResearchNode(kTechId.Weapons1,               kTechId.Armory,               kTechId.None)
+    self.techTree:AddResearchNode(kTechId.Weapons1,               kTechId.Armory,              kTechId.None)
+   
+    self.techTree:AddUpgradeNode(kTechId.PowerPackElectrify,     kTechId.None,        		   kTechId.None)
     
     // Marine tier 2
     self.techTree:AddUpgradeNode(kTechId.AdvancedArmory,               kTechId.Armory,        kTechId.None)
@@ -246,6 +253,7 @@ function MarineTeam:InitTechTree()
     self.techTree:AddResearchNode(kTechId.Weapons2,               kTechId.Weapons1,            kTechId.None)
 
     self.techTree:AddBuildNode(kTechId.PowerPack,                 kTechId.CommandStation,       kTechId.None)      
+    self.techTree:AddBuildNode(kTechId.ElectrifiedPowerPack,      kTechId.CommandStation,                kTechId.None)
 
     self.techTree:AddBuildNode(kTechId.Observatory,               kTechId.InfantryPortal,       kTechId.None)      
     self.techTree:AddTargetedActivation(kTechId.Scan,             kTechId.Observatory,                 kTechId.None)
@@ -284,7 +292,7 @@ function MarineTeam:InitTechTree()
     self.techTree:AddBuyNode(kTechId.FlamethrowerAlt,                    kTechId.FlamethrowerAltTech,                kTechId.None, kTechId.Flamethrower)
     
     // ARCs
-    self.techTree:AddBuildNode(kTechId.RoboticsFactory,                    kTechId.Armory,              kTechId.None)      
+    self.techTree:AddBuildNode(kTechId.RoboticsFactory,                    kTechId.InfantryPortal,              kTechId.None)      
     self.techTree:AddManufactureNode(kTechId.ARC,                          kTechId.RoboticsFactory,                kTechId.None)        
     self.techTree:AddActivation(kTechId.ARCDeploy)
     self.techTree:AddActivation(kTechId.ARCUndeploy)
@@ -308,7 +316,7 @@ function MarineTeam:InitTechTree()
     self.techTree:AddResearchNode(kTechId.JetpackTech,           kTechId.PrototypeLab, kTechId.None)
     
     // TODO: Make jetpacks depend on ThreeCommandStations
-    //self.techTree:AddBuyNode(kTechId.Jetpack,                    kTechId.JetpackTech, kTechId.PrototypeLab)
+    self.techTree:AddBuyNode(kTechId.Jetpack,                    kTechId.JetpackTech, kTechId.PrototypeLab)
     self.techTree:AddResearchNode(kTechId.JetpackFuelTech,       kTechId.JetpackTech, kTechId.None)
     self.techTree:AddResearchNode(kTechId.JetpackArmorTech,      kTechId.JetpackTech, kTechId.None)
     

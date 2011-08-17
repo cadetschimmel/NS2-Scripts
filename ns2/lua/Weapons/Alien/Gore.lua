@@ -40,11 +40,11 @@ Gore.kSecondaryEnergyCost = 10
 Gore.kSecondaryAttackDelay = 3         
 
 function Gore:GetPrimaryEnergyCost(player)
-    return Gore.kPrimaryEnergyCost
+    return self:ApplyEnergyCostModifier(Gore.kPrimaryEnergyCost, player)
 end
 
 function Gore:GetSecondaryEnergyCost(player)
-    return Gore.kSecondaryEnergyCost
+    return self:ApplyEnergyCostModifier(Gore.kSecondaryEnergyCost, player)
 end
 
 function Gore:GetPrimaryAttackDelay()

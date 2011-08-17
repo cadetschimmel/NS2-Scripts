@@ -69,6 +69,10 @@ function Pistol:GetInaccuracyScalar()
     return ConditionalValue(self.altMode, .5, 1)
 end
 
+function Pistol:GetHasSecondary(player)
+	return true
+end
+
 function Pistol:GetHUDSlot()
     return kSecondaryWeaponSlot
 end
