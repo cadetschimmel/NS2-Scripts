@@ -88,7 +88,7 @@ Marine.kJetpackGravity = -12
 Marine.kJetpackBaseAcceleration = 13
 Marine.kJetPackUpgradeAcceleration = kJetpackUpgradeAcceleration
 
-Marine.kJetpackTakeOffTime = .7
+Marine.kJetpackTakeOffTime = .5
 Marine.kJetpackDelay = .6
 
 Marine.kJetpackUseFuelRate = kJetpackUseFuelRate
@@ -354,6 +354,16 @@ function Marine:UpdateJetpackSteamEffect()
 		self.timeLastThrust = Shared.GetTime()
 		
 	end
+
+end
+
+function Marine:GetIsOnGround()
+
+	if self.jetpacking then
+		return false
+	end
+	
+	return Player.GetIsOnGround(self)
 
 end
 
@@ -1250,14 +1260,15 @@ function Marine:ModifyVelocity(input, velocity)
 		local redirectDir = viewCoords:TransformVector( move )
 		local deltaVelocity = redirectDir * input.time * self:GetAcceleration()
 		
-		velocity.x = velocity.x + deltaVelocity.x			
+		velocity.x = velocity.x + deltaVelocity.x
+		velocity.y = Clamp(velocity.y + self:GetAcceleration()*input.time *.3, -self:GetMaxSpeed(), self:GetMaxSpeed() / 4)
 		velocity.z = velocity.z + deltaVelocity.z
 		
 	// TakeOff mode
-    elseif (self:GetJetPackState(input) == 3) then
-    	if self:GetIsOnGround() then
-    		velocity.y = 0.5
-		end
+    //elseif (self:GetJetPackState(input) == 3) then
+    //	if self:GetIsOnGround() then
+    //		velocity.y = 0.5
+	//	end
     end
 	
 end
@@ -1266,13 +1277,9 @@ function Marine:GetFrictionForce(input, velocity)
 		
 	// Jetpacking Mode 2: Flight mode
 	if (self:GetJetPackState(input) == 2) then
-		if self:GetIsOnGround() then
-			return Vector(-velocity.x, -velocity.y, -velocity.z) * 7
-		else
-			return Vector(-velocity.x, -velocity.y/2, -velocity.z) * 1.5
-		end	
+		return Vector(-velocity.x, -velocity.y/2, -velocity.z) * 1.5
 	elseif (self:GetJetPackState(input) == 3) then
-		return Vector(0, -velocity.y, 0) * 4.1
+		return Vector(0, -velocity.y, 0) * 4
 	end	
 	
 	return Player.GetFrictionForce(self, input, velocity)
