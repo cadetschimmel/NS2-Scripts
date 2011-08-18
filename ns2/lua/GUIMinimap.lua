@@ -1066,26 +1066,22 @@ function GUIMinimap:SendKeyEvent(key, down)
     
     if PlayerUI_IsACommander() then
         if key == InputKey.MouseButton0 and self.mousePressed["LMB"]["Down"] ~= down then
-            
             self.mousePressed["LMB"]["Down"] = down
             local mouseX, mouseY = Client.GetCursorPosScreen()
             local containsPoint, withinX, withinY = GUIItemContainsPoint(self.minimap, mouseX, mouseY)
             if down and containsPoint then
                 local buttonIndex = nil
-                // $AS Left click now just moves the mini map the old behavior was confusing and not consistent              
-               /* if self.buttonsScript then
+                if self.buttonsScript then
                     buttonIndex = self.buttonsScript:GetTargetedButton()
-                    Print("index = %s", ToString(buttonIndex))
                 end
-                if buttonIndex == nil then
+                if buttonIndex then
                     CommanderUI_ActionCancelled()
                     self.buttonsScript:SetTargetedButton(nil)
                     CommanderUI_MapClicked(withinX / self:GetMinimapSize().x, withinY / self:GetMinimapSize().y, 0, buttonIndex)
                     // The down event is considered "captured" at this point and shouldn't be processed in UpdateInput().
                     self.mousePressed["LMB"]["Down"] = false
-                    result = true
-                end */
-                return false
+                end
+                return true
             end
         elseif key == InputKey.MouseButton1 and self.mousePressed["RMB"]["Down"] ~= down then
             self.mousePressed["RMB"]["Down"] = down

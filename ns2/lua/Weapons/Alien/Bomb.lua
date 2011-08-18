@@ -55,7 +55,6 @@ if (Server) then
             // Do splash damage to structures and ARCs
             local hitEntities = GetEntitiesForTeamWithinRange("Structure", GetEnemyTeamNumber(self:GetTeamNumber()), self:GetOrigin(), Bomb.kSplashRadius)
             table.copy(GetEntitiesForTeamWithinRange("ARC", GetEnemyTeamNumber(self:GetTeamNumber()), self:GetOrigin(), Bomb.kSplashRadius), hitEntities, true)
-            table.copy(GetEntitiesForTeamWithinRange("MAC", GetEnemyTeamNumber(self:GetTeamNumber()), self:GetOrigin(), Bomb.kSplashRadius), hitEntities, true)
             
             // Do damage to every target in range
             RadiusDamage(hitEntities, self:GetOrigin(), Bomb.kSplashRadius, kBileBombDamage, self, false)

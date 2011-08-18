@@ -85,7 +85,7 @@ Marine.kWeldedEffectsInterval = .5
 
 Marine.kJetpackGravity = -12
 
-Marine.kJetpackBaseAcceleration = 13
+Marine.kJetpackBaseAcceleration = 14.5
 Marine.kJetPackUpgradeAcceleration = kJetpackUpgradeAcceleration
 
 Marine.kJetpackTakeOffTime = .5
@@ -233,7 +233,7 @@ function Marine:OnInit()
 end
 
 function Marine:GetSlowOnLand()
-    return true
+    return not self.hasJetpack
 end
 
 function Marine:GetArmorAmount()
@@ -275,21 +275,20 @@ end
 
 function Marine:GiveJetpack()
 	
-	local jetpack = CreateEntity(JetpackOnBack.kMapName, self:GetAttachPointOrigin(Jetpack.kAttachPoint), self:GetTeamNumber())
-	jetpack:SetParent(self)
-    jetpack:SetAttachPoint(Jetpack.kAttachPoint)
-	
-	self.jetpackId = jetpack:GetId()
-	self.hasJetpack = true
-	self.jetpackFuel = 1
-	self.timeStartedJetpack = 0
-	self.lastTimeJetpackEnded = 0	
-	
 	if Server then
-		if (GetTechSupported(self, kTechId.JetpackFuelTech, true)) then
+	
+		local jetpack = CreateEntity(JetpackOnBack.kMapName, self:GetAttachPointOrigin(Jetpack.kAttachPoint), self:GetTeamNumber())
+		jetpack:SetParent(self)
+	    jetpack:SetAttachPoint(Jetpack.kAttachPoint)
 		
+		self.jetpackId = jetpack:GetId()
+		self.hasJetpack = true
+		self.jetpackFuel = 1
+		self.timeStartedJetpack = 0
+		self.lastTimeJetpackEnded = 0		
+
+		if (GetTechSupported(self, kTechId.JetpackFuelTech, true)) then
 			self:UpgradeJetpackMobility()
-			
 		end	
 		
 		if (GetTechSupported(self, kTechId.JetpackArmorTech, true)) then
@@ -381,7 +380,7 @@ function Marine:UpdateJetpack(input)
         if (Shared.GetTime() - self.lastTimeJetpackEnded > 0.3) and jumpPressed and (self.timeStartedJetpack == 0) and (not self.jetpacking) and (not self:GetIsOnGround()) and self.jetpackFuel > 0 then
 
             Shared.PlaySound(self, Marine.kJetpackStart)
-            Shared.PlaySound(self, Marine.kJetpackLoop)
+            //Shared.PlaySound(self, Marine.kJetpackLoop)
             
             local origin, success = self:GetAttachPointOrigin(Marine.kJetpackNode)
             self:CreateAttachedEffect(Marine.kJetpackEffect, Marine.kJetpackNode )
@@ -397,7 +396,7 @@ function Marine:UpdateJetpack(input)
 		if self.timeStartedJetpack ~= 0 and ( (Shared.GetTime() - self.timeStartedJetpack) > 0.3) and ((self.jetpackFuel == 0) or (not jumpPressed) or (not self.jetpacking)) then
 
             Shared.StopSound(self, Marine.kJetpackStart)
-            Shared.StopSound(self, Marine.kJetpackLoop)
+            //Shared.StopSound(self, Marine.kJetpackLoop)
             Shared.PlaySound(self, Marine.kJetpackEnd)
             Shared.StopEffect(self, Marine.kJetpackEffect, self )
 
@@ -701,7 +700,7 @@ function Marine:GetMaxSpeed()
     // Take into account our weapon inventory and current weapon. Assumes a vanilla marine has a scalar of around .8.
     local inventorySpeedScalar = self:GetInventorySpeedScalar() + .17
 
-	if self.jetpacking then
+	if self.jetpacking or (not self:GetIsOnGround() and self.hasJetpack) then
 		maxSpeed = Marine.kWalkMaxSpeed * Marine.kAirSpeedMultiplier
 	else
 		// Take into account crouching
@@ -1261,8 +1260,13 @@ function Marine:ModifyVelocity(input, velocity)
 		local deltaVelocity = redirectDir * input.time * self:GetAcceleration()
 		
 		velocity.x = velocity.x + deltaVelocity.x
-		velocity.y = Clamp(velocity.y + self:GetAcceleration()*input.time *.3, -self:GetMaxSpeed(), self:GetMaxSpeed() / 4)
 		velocity.z = velocity.z + deltaVelocity.z
+		
+		if (input.move:GetLength() > 0) then	
+			velocity.y = Clamp(velocity.y + self:GetAcceleration()*input.time *.2, -self:GetMaxSpeed(), self:GetMaxSpeed() / 7)
+		else
+			velocity.y = Clamp(velocity.y + self:GetAcceleration()*input.time *2.8, -self:GetMaxSpeed(), self:GetMaxSpeed() / 3)
+		end
 		
 	// TakeOff mode
     //elseif (self:GetJetPackState(input) == 3) then
@@ -1277,7 +1281,7 @@ function Marine:GetFrictionForce(input, velocity)
 		
 	// Jetpacking Mode 2: Flight mode
 	if (self:GetJetPackState(input) == 2) then
-		return Vector(-velocity.x, -velocity.y/2, -velocity.z) * 1.5
+		return Vector(-velocity.x, -velocity.y * .5, -velocity.z) * 2
 	elseif (self:GetJetPackState(input) == 3) then
 		return Vector(0, -velocity.y, 0) * 4
 	end	

@@ -14,14 +14,14 @@ kExosuitHealth = 100	kExosuitArmor = 200	kExosuitPointValue = 10
 		
 kSkulkHealth = 55	kSkulkArmor = 10	kSkulkPointValue = 4
 kGorgeHealth = 150	kGorgeArmor = 45	kGorgePointValue = 7
-kLerkHealth = 120	kLerkArmor = 30	kLerkPointValue = 15
+kLerkHealth = 200	kLerkArmor = 30	kLerkPointValue = 15
 kFadeHealth = 250	kFadeArmor = 60	kFadePointValue = 20
 kOnosHealth = 700	kOnosArmor = 600	kOnosPointValue = 30
 		
 kEggHealth = 300	kEggArmor = 0	kEggPointValue = 2
 		
-kArmorPerUpgradeLevel = 20	
-kJetpackArmorValue = 25	
+kArmorPerUpgradeLevel = 25
+kJetpackArmorValue = 25
 kExosuitArmorPerUpgradeLevel = 30		
 kBaseArmorAbsorption = 0.7		
 kHealthPointsPerArmor = 2		

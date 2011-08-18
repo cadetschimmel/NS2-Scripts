@@ -137,7 +137,9 @@ function Marine:OnKill(damage, attacker, doer, point, direction)
     
     // remove the jetpack
     if self.hasJetpack and self.jetpackId ~= Entity.invalidId then
-    	DestroyEntity(Shared.GetEntity(self.jetpackId))
+    	local jpid = self.jetpackId
+    	self.jetpackId = Entity.invalidId
+    	DestroyEntity(Shared.GetEntity(jpid))
 	end
     
     self.hasJetpack = false

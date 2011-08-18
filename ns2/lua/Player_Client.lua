@@ -840,7 +840,13 @@ function Player:UpdateClientEffects(deltaTime, isLocal)
     end
     
     if self:GetIsAlive() and self:isa("Marine") and self.hasJetpack and (self.jetpackId ~= Entity.invalidId) then
-    	Shared.GetEntity(self.jetpackId):SetIsVisible(drawWorld)
+    
+    	local jp = Shared.GetEntity(self.jetpackId)
+    	
+    	if jp ~= nil then
+    		jp:SetIsVisible(drawWorld)
+		end
+		
 	end
     
     // Hide view model for other players and when in third person

@@ -27,6 +27,9 @@ class 'Player' (LiveScriptActor)
 Player.kTooltipSound    = PrecacheAsset("sound/ns2.fev/common/tooltip")
 Player.kToolTipInterval = 18
 
+Player.kMarineResReceivedSound      = PrecacheAsset("sound/ns2.fev/marine/common/res_received")
+Player.kAlienResReceivedSound       = PrecacheAsset("sound/ns2.fev/alien/common/res_received")
+
 if (Server) then
     Script.Load("lua/Player_Server.lua")
 else
@@ -2131,7 +2134,7 @@ function Player:HandleButtons(input)
 
     PROFILE("Player:HandleButtons")
 
-    if (bit.band(input.commands, Move.Use) ~= 0) and not self.primaryAttackLastFrame and not self.secondaryAttackLastFrame then
+    if (bit.band(input.commands, Move.Use) ~= 0) then
         self:Use(input.time)    
     end
     

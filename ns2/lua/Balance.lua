@@ -58,9 +58,9 @@ kARCSplashTechResearchCost = 15
 kARCArmorTechResearchCost = 15
 
 kJetpackCost = 25
-kJetpackTechResearchCost = 25
-kJetpackFuelTechResearchCost = 15
-kJetpackArmorTechResearchCost = 10
+kJetpackTechResearchCost = 20
+kJetpackFuelTechResearchCost = 25
+kJetpackArmorTechResearchCost = 20
 
 kExoskeletonCost = 15
 kExoskeletonTechResearchCost = 20
@@ -366,7 +366,7 @@ kSporeMineLivingTime = 30
 kUmbraEnergyCost = 35
 kUmbraFireDelay = 0.8
 
-kSwipeDamage = 85
+kSwipeDamage = 70
 kSwipeDamageType = kDamageType.Puncture
 kSwipeFireDelay = 0.75
 kSwipeEnergyCost = 10
@@ -377,7 +377,7 @@ kStabFireDelay = 1.9
 kStabEnergyCost = 30
 
 kBlinkEnergyCost = 18
-kBlinkInitialEnergyCost = 23
+kBlinkInitialEnergyCost = 25
 
 kFetchEnergyCost = 24
 kFetchInitialEnergyCost = 16

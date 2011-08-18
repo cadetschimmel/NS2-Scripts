@@ -51,7 +51,7 @@ Lerk.kSwoopGravityScalar = -30.0
 Lerk.kRegularGravityScalar = -7
 Lerk.kFlightGravityScalar = -4
 Lerk.kMaxWalkSpeed = 2.8            // Lerks walk slowly to encourage flight
-Lerk.kMaxSpeed = 13
+Lerk.kMaxSpeed = 10
 Lerk.kAirAcceleration = 4
 Lerk.kHealth = kLerkHealth
 Lerk.kArmor = kLerkArmor
@@ -435,6 +435,7 @@ function Lerk:UpdateHelp()
     
 end
 
+/*
 function Lerk:GetZoneDamage(damage, endPoint)
 
 	local center = self:GetAttachPointOrigin("Head_Tongue_02") + (self:GetOrigin() - self:GetAttachPointOrigin("Head_Tongue_02")) / 2
@@ -451,5 +452,6 @@ function Lerk:GetZoneDamage(damage, endPoint)
 	return damage
 
 end
+*/
 
 Shared.LinkClassToMap( "Lerk", Lerk.kMapName, Lerk.networkVars )

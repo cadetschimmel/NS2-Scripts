@@ -9,44 +9,25 @@
 Script.Load("lua/Weapons/Alien/Ability.lua")
 Script.Load("lua/Weapons/Alien/SporeCloud.lua")
 Script.Load("lua/Weapons/Alien/Umbra.lua")
-Script.Load("lua/LoopingSoundMixin.lua")
 
 class 'Spores' (Umbra)
 
 Spores.kMapName = "spores"
-
 Spores.kDelay = kSporesFireDelay
 Spores.kDelayBomb = kSporeMineFireDelay
 Spores.kSwitchTime = .5
 Spores.kSporeMineInitialPush = 10
 
-Spores.kSwitchTime = .5
-Spores.kSporeDustCloudLifetime = 12.0      
-Spores.kSporeCloudLifetime = 6.0      // From NS1
-Spores.kSporeDustCloudDPS = kSporesDustDamagePerSecond
-Spores.kSporeCloudDPS = kSporesDamagePerSecond
-Spores.kSporeDustCloudRadius = 1.5
-Spores.kSporeCloudRadius = 3    // 5.7 in NS1
-Spores.kLoopingDustSound = PrecacheAsset("sound/ns2.fev/alien/lerk/spore_spray")
-
-
 // Points per second
 Spores.kDamage = kSporesDamagePerSecond
 
 local networkVars = {
-    sporePoseParam     = "compensated float",
+    sporePoseParam     = "compensated float"
 }
-
-PrepareClassForMixin(Spores, LoopingSoundMixin)
 
 function Spores:OnCreate()
     Umbra.OnCreate(self)
     self.sporePoseParam = 0
-end
-
-function Spores:OnInit()
-    Ability.OnInit(self)
-    InitMixin(self, LoopingSoundMixin)
 end
 
 function Spores:GetEnergyCost(player)
@@ -54,53 +35,37 @@ function Spores:GetEnergyCost(player)
 end
 
 function Spores:GetPrimaryAttackDelay()
-    return kSporesDustFireDelay
+    return Spores.kDelay
 end
 
 function Spores:GetIconOffsetY(secondary)
     return kAbilityOffset.Spores
 end
 
-local function CreateSporeCloud(origin, player, lifetime, damage, radius)
-
-    local spores = CreateEntity(SporeCloud.kMapName, origin, player:GetTeamNumber())
-    
-    spores:SetOwner(player)
-    spores:SetLifetime(lifetime) 
-    spores:SetDamage(damage) 
-    spores:SetRadius(radius)  
-    
-    return spores
-    
-end
-
 function Spores:PerformPrimaryAttack(player)
-
-    // Create long-lasting spore cloud near player that can be used to prevent marines from passing through an area
+    
     player:SetActivityEnd(player:AdjustFuryFireDelay(self:GetPrimaryAttackDelay()))
-    
+
+    // Trace instant line to where it should hit
+    local viewAngles = player:GetViewAngles()
+    local viewCoords = viewAngles:GetCoords()    
+    local startPoint = player:GetEyePos()
+
+    local trace = Shared.TraceRay(startPoint, startPoint + viewCoords.zAxis * kLerkSporeShootRange, PhysicsMask.Bullets, EntityFilterOne(player))
+  
+    // Create spore cloud that will damage players
     if Server then
-    
-        local origin = player:GetModelOrigin()
-        local sporecloud = CreateSporeCloud(origin, player, Spores.kSporeDustCloudLifetime, Spores.kSporeDustCloudDPS, Spores.kSporeDustCloudRadius)
-        if not self:GetIsLoopingSoundPlaying() then
-            self:PlayLoopingSound(player, Spores.kLoopingDustSound)
-        end
-        
+   
+        local spawnPoint = trace.endPoint + (trace.normal * 0.5)
+        local spores = CreateEntity(SporeCloud.kMapName, spawnPoint, player:GetTeamNumber())
+        spores:SetOwner(player)
+
+        self:TriggerEffects("spores", {effecthostcoords = Coords.GetTranslation(spawnPoint) })
+
     end
     
     return true
-    
-end
-
-function Spores:OnStopLoopingSound(parent)
-end
-
-function Spores:OnPrimaryAttackEnd(player)
-
-    Ability.OnPrimaryAttackEnd(self, player)
-    self:StopLoopingSound(player)
-    
+        
 end
 
 function Spores:GetHUDSlot()
