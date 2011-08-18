@@ -513,7 +513,11 @@ function Skulk:GetMaxSpeed()
     
     local maxspeed = 0
 
-	maxspeed = ConditionalValue(self.movementModiferState, Skulk.kMaxWalkSpeed, self.currentMaxSpeed)  
+    if self.leaping then
+        maxspeed = Skulk.kLeapSpeed
+    else
+		maxspeed = ConditionalValue(self.movementModiferState, Skulk.kMaxWalkSpeed, self.currentMaxSpeed)  
+	end
     
     return maxspeed * self:GetSlowSpeedModifier()
     
