@@ -78,7 +78,7 @@ Skulk.kAnimLeap = "leap"
 Skulk.kWallJumpBoostTime = 0.9 // before it drops off
 Skulk.kBoostPerJumpFactor = 1 // increase this to make each boost / jump more effective
 Skulk.kBoostedMaxSpeed = 15
-Skulk.kOnGroundBoostTimeTolerance = .5 // this number describes how good your timing has to be
+Skulk.kOnGroundBoostTimeTolerance = .35 // this number describes how good your timing has to be
 
 PrepareClassForMixin(Skulk, GroundMoveMixin)
 PrepareClassForMixin(Skulk, CameraHolderMixin)
@@ -189,7 +189,8 @@ function Skulk:OnLeap()
     local velocity = self:GetVelocity()
 
 	// accelerate by 2 factors, minimum is 4
-    self:Accelerate(2*Skulk.kBoostPerJumpFactor, 6*Skulk.kBoostPerJumpFactor)
+    self:Accelerate(3*Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed + 6*Skulk.kBoostPerJumpFactor)
+    self.timeOnSurface = 0
 		
     local forwardVec = self:GetViewAngles():GetCoords().zAxis
     local newVelocity = velocity + forwardVec * Skulk.kLeapForce
@@ -407,8 +408,8 @@ function Skulk:PreUpdateMove(input, runningPrediction)
 	end
 	
 	// always slowdown a bit when current velocity is slower than boosted, in case we hit some obstacle on ground or in mid air
-	if (self.currentMaxSpeed ~= Skulk.kMaxSpeed) and (self.currentMaxSpeed - self:GetVelocity():GetLength() > .5) then
-		self.currentMaxSpeed = Clamp(self.currentMaxSpeed - (self.currentMaxSpeed - self:GetVelocity():GetLength()) * .8* input.time, Skulk.kMaxSpeed, Skulk.kBoostedMaxSpeed)
+	if (self.currentMaxSpeed ~= Skulk.kMaxSpeed) and (self.currentMaxSpeed - self:GetVelocity():GetLength() > .2) then
+		self.currentMaxSpeed = Clamp(self.currentMaxSpeed - (self.currentMaxSpeed - self:GetVelocity():GetLength()) * 1.2* input.time, Skulk.kMaxSpeed, Skulk.kBoostedMaxSpeed)
 		//Print("slowdown by obstacle")
 	end	
 
@@ -752,9 +753,11 @@ function Skulk:HandleJump(input, velocity)
         
         self:SetOverlayAnimation(Player.kAnimStartJump)
         
-        // TODO: conditions when to trigger the boost? angle of current and new velocity should not be too sharp
-        if velocity:GetLength() > self.currentMaxSpeed then
-        	self:Accelerate(Skulk.kBoostPerJumpFactor, 4*Skulk.kBoostPerJumpFactor)
+        local kAllowedBoostInterval = 0.5
+        
+        // TODO: conditions when to trigger the boost? angle of current and new velocity should not be too sharp?
+        if velocity:GetLength() > self.currentMaxSpeed and ( (Shared.GetTime() - self.timeOfLastJump) > kAllowedBoostInterval) then
+        	self:Accelerate(Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed + 2*Skulk.kBoostPerJumpFactor)
         end
 	
     	self.timeOfLastJump = Shared.GetTime()
