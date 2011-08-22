@@ -33,7 +33,7 @@ function Flame:OnCreate()
     Projectile.OnCreate(self)
     
     // intervall of dealing damage
-    self:SetNextThink(0.05)
+    self:SetNextThink(0.01)
     
     if Server then    
     	self:Detonate(nil)
@@ -46,7 +46,7 @@ function Flame:OnDestroy()
 
 	if Client then	
 	
-		if(NetworkRandom() < 0.3 ) then
+		if(NetworkRandom() < 0.1 ) then
 			self:TriggerEffects("flame_end", { effecthostcoords = Coords.GetTranslation(self:GetOrigin()) })
 		end
 	

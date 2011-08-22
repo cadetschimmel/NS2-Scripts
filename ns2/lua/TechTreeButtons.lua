@@ -345,6 +345,8 @@ function InitTechTreeMaterialOffsets()
     kAlienTechIdToMaterialOffset[kTechId.Carapace] = 81
     kAlienTechIdToMaterialOffset[kTechId.RegenerationTech] = 82
     kAlienTechIdToMaterialOffset[kTechId.Regeneration] = 82
+    kAlienTechIdToMaterialOffset[kTechId.RedemptionTech] = 83
+    kAlienTechIdToMaterialOffset[kTechId.Redemption] = 83
     kAlienTechIdToMaterialOffset[kTechId.FeintTech] = 83
     kAlienTechIdToMaterialOffset[kTechId.SapTech] = 84
     kAlienTechIdToMaterialOffset[kTechId.StompTech] = 85

@@ -129,6 +129,7 @@ kBlinkResearchCost = 10
 
 kCarapaceResearchCost = 10
 kRegenerationResearchCost = 10
+kRedemptionResearchCost = 10
 
 kCorpulenceResearchCost = 5
 kBacteriaResearchCost = 5
@@ -144,6 +145,7 @@ kStompResearchCost = 5
 
 kCarapaceCost = 2
 kRegenerationCost = 2
+kRedemptionCost = 2
 kLeapCost = 2
 kFrenzyCost = 2
 kSwarmCost = 2
@@ -259,7 +261,7 @@ kFlechetteAmmo = 6
 
 kFlamethrowerDamage = 0.2 // original 20, decreased because of stacks
 kFlamethrowerDamageType = kDamageType.Flame
-kFlamethrowerFireDelay = 0.15
+kFlamethrowerFireDelay = 0.1
 kFlamethrowerClipSize = 70
 kFlamethrowerMaxStacks = 90
 kFlamethrowerBurnDuration = 5 // seconds
@@ -312,10 +314,15 @@ kWeapons3DamageScalar = 1.3
 
 
 // ALIEN DAMAGE
+kBurstDamage = 40
+kBurstDamageType = kDamageType.Structural
+
 kBiteDamage = 75
 kBiteDamageType = kDamageType.Normal
 kBiteFireDelay = 0.45
 kBiteEnergyCost = 5.5
+
+kXenocideEnergyCost = 40
 
 kLeapEnergyCost = 40
 
@@ -340,13 +347,13 @@ kBileBombFireDelay = 1
 kBileBombEnergyCost = 26
 
 kSpikesMaxZoomFaktor = 3 // = 3 seconds to achieve max zoom damage modifier
-kSpikeMaxDamage = 15 // original: 30
-kSpikeMinDamage = 3
-kSpikeMaxRange = 1
-kSpikeMinRange = 8
+kSpikeMaxDamage = 17 // original: 24
+kSpikeMinDamage = 10
+kSpikeMinDamageRange = 23
+kSpikeMaxDamageRange = 2
 kSpikeDamageType = kDamageType.Light
-kSpikeFireDelay = 0.1
-kSpikeEnergyCost = 1.35
+kSpikeFireDelay = 0.08
+kSpikeEnergyCost = 2
 kPiercingDamageScalar = 1.4
 
 kSpikesAltDamage = 106 // 2 sniper shots + 1 parasite will kill a marine
@@ -354,14 +361,13 @@ kSpikesAltDamageType = kDamageType.Normal
 kSpikesAltFireDelay = 1
 kSpikesAltEnergyCost = 38 // 3 sniper shots in a row
 
-kSporesDamagePerSecond = 8
-kSporesDamageType = kDamageType.Normal
-kSporesFireDelay = 0.7
-kSporesEnergyCost = 20
-kSporeMineEnergyCost = 45
-kSporeMineFireDelay = 1.2
-kSporeMineTriggerRange = 2.7
-kSporeMineLivingTime = 30
+kSporesDamagePerSecond = 7
+kSporesDamageType = kDamageType.Gas
+kSporesDustDamagePerSecond = 18
+kSporesDustFireDelay = 0.18
+kSporesCloudFireDelay = 0.8
+kSporesDustEnergyCost = 7
+kSporesCloudEnergyCost = 20
 
 kUmbraEnergyCost = 35
 kUmbraFireDelay = 0.8
@@ -537,6 +543,7 @@ kLeapResearchTime = 20
 kBlinkResearchTime = 20
 kCarapaceResearchTime = 20
 kRegenerationResearchTime = 20
+kRedemptionResearchTime = 20
 kCamouflageResearchTime = 20
 
 kCorpulenceResearchTime = 10

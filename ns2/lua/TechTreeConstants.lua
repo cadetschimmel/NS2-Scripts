@@ -109,6 +109,9 @@ kTechId = enum({
     
     // Alien abilities (not all are needed, only ones with damage types)
     'Bite', 'Parasite', 'Spit', 'Spray', 'BileBomb', 'Spikes', 'SpikesAlt', 'Spores', 'HydraSpike', 'SwipeBlink', 'StabBlink', 'SwipeFetch', 'Gore', 
+ 
+ 	// special crawler life-form ability
+ 	'Crawler', 'Burst',
     
     // Alien structures 
     'Hive', 'Harvester', 'HarvesterUpgrade', 'Drifter', 'Egg', 'Cocoon', 'Embryo', 'Hydra', 'Cyst', 'MiniCyst', 'SporeMine', 'MiniCrag', 'MiniShift', 'MiniShade',
@@ -126,10 +129,10 @@ kTechId = enum({
     'BabblerTech', 'EchoTech', 'PhantasmTech', 
     'Melee1Tech', 'Melee2Tech', 'Melee3Tech', 'AlienArmor1Tech', 'AlienArmor2Tech', 'AlienArmor3Tech',
     'AdrenalineTech', 'BileBombTech', 'LeapTech', 'BlinkTech', 'BacteriaTech', 'FeintTech', 'SapTech', 'StompTech', 'BoneShieldTech', 'CarapaceTech', 'PiercingTech',
-    'FrenzyTech', 'SwarmTech', 'RegenerationTech', 'CamouflageTech',    
+    'FrenzyTech', 'SwarmTech', 'RegenerationTech', 'CamouflageTech', 'RedemptionTech',   
     
     // Global upgrades
-    'Carapace', 'Regeneration', 'Frenzy', 'Swarm', 'Adrenaline', 'Camouflage',
+    'Carapace', 'Regeneration', 'Frenzy', 'Swarm', 'Adrenaline', 'Camouflage', 'Redemption',
     
     // Alien-specific upgrades
     'Leap', 'Blink', 'Bacteria', 'Corpulence', 'DropStructureAbility', 'HarvesterAbility', 'Piercing', 'Feint', 'Sap', 'Gore', 'Stomp', 'BoneShield',     

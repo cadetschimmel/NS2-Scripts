@@ -153,7 +153,7 @@ function Crag:GetTechButtons(techId)
        
     elseif(techId == kTechId.UpgradesMenu) then 
     
-        techButtons = {kTechId.CarapaceTech, kTechId.RegenerationTech, kTechId.None, kTechId.None, kTechId.None, kTechId.None, kTechId.None}
+        techButtons = {kTechId.CarapaceTech, kTechId.RedemptionTech, kTechId.RegenerationTech, kTechId.None, kTechId.None, kTechId.None, kTechId.None}
         techButtons[kAlienBackButtonIndex] = kTechId.RootMenu
         
     end

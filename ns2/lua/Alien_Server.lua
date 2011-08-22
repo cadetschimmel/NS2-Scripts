@@ -192,5 +192,25 @@ function Alien:CopyPlayerDataFrom(player)
     
     self.twoHives = player.twoHives
     self.threeHives = player.threeHives
+    self.hasRedemption = player.hasRedemption
     
+end
+
+function Alien:OnKill(damage, attacker, doer, point, direction)
+
+	Player.OnKill(self, damage, attacker, doer, point, direction)
+
+	// spawn as a crawler!
+	if not self:isa("Crawler") and self.hasRedemption then
+	
+		self:RemoveChildren()
+		self.hasRedemption = false
+		
+		local crawler = self:Replace(Crawler.kMapName)
+		crawler:SetEnergy(Ability.kMaxEnergy)
+		crawler:SetLastLifeForm(self:GetTechId())
+		crawler:PlayBurstEffects()
+				
+	end
+
 end

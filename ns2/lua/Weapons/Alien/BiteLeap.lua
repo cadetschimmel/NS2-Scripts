@@ -55,10 +55,14 @@ function BiteLeap:GetDeathIconIndex()
     return kDeathMessageIcon.Bite
 end
 
+function BiteLeap:GetPrimaryAttackDelay()
+	return kBiteFireDelay
+end
+
 function BiteLeap:PerformPrimaryAttack(player)
     
     // Play random animation, speeding it up if we're under effects of fury
-    player:SetActivityEnd( player:AdjustFuryFireDelay(kBiteFireDelay) )
+    player:SetActivityEnd( player:AdjustFuryFireDelay(self:GetPrimaryAttackDelay()) )
 
     // do a left and right melee attack, choose the juiciest target if any
 
@@ -89,10 +93,15 @@ function BiteLeap:PerformPrimaryAttack(player)
     if hit and trace and trace.entity ~= nil then
         self.lastBittenEntityId = trace.entity:GetId()
 
-        self:ApplyMeleeHit(player, kBiteDamage, trace, direction)        
+		self:PerformMelee(player, trace, direction)
+               
     end        
 
     return true
+end
+
+function BiteLeap:PerformMelee(player, trace, direction)
+	self:ApplyMeleeHit(player, kBiteDamage, trace, direction) 
 end
 
 function BiteLeap:GetEffectParams(tableParams)

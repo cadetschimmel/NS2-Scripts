@@ -12,6 +12,7 @@ function Skulk:InitWeapons()
     
     self:GiveItem(BiteLeap.kMapName)
     self:GiveItem(Parasite.kMapName)
+    self:GiveItem(XenocideLeap.kMapName)
     
     self:SetActiveWeapon(BiteLeap.kMapName)
     

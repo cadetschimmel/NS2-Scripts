@@ -2130,6 +2130,10 @@ function Player:ModifyVelocity(input, velocity)
     
 end
 
+function Player:GetCanBuyOverride()
+	return true
+end
+
 function Player:HandleButtons(input)
 
     PROFILE("Player:HandleButtons")
@@ -2141,7 +2145,7 @@ function Player:HandleButtons(input)
     if not Shared.GetIsRunningPrediction() then
     
         // Player is bringing up the buy menu (don't toggle it too quickly)
-        if (bit.band(input.commands, Move.Buy) ~= 0 and Shared.GetTime() > (self.timeLastMenu + .3)) then
+        if (bit.band(input.commands, Move.Buy) ~= 0 and Shared.GetTime() > (self.timeLastMenu + .3)) and self:GetCanBuyOverride() then
         
             self:Buy()
             self.timeLastMenu = Shared.GetTime()

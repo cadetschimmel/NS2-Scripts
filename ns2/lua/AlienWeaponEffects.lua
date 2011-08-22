@@ -23,7 +23,7 @@ kAlienWeaponEffects =
             // Brian TODO: Change to something cooler
             {player_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", doer = "Bomb", done = true},        
             
-            {player_cinematic = "cinematics/alien/lerk/spike_impact.cinematic", doer = "Spikes", done = true},
+            {player_cinematic = "cinematics/alien/lerk/spike_impact.cinematic", doer = "Spikes", done = true},            
             //{player_cinematic = "cinematics/alien/hydra/spike_impact.cinematic", doer = "HydraSpike", done = true},
             {player_cinematic = "cinematics/materials/%s/scrape.cinematic", doer = "SwipeBlink", done = true},
             {player_cinematic = "cinematics/materials/%s/scrape.cinematic", doer = "StabBlink", done = true},
@@ -33,13 +33,12 @@ kAlienWeaponEffects =
         generalHitSounds = 
         {
             //{sound = "sound/ns2.fev/alien/common/spike_hit_marine", world_space = true, doer = "HydraSpike", classname = "Marine", done = true},
-            //{sound = "sound/ns2.fev/alien/common/spike_hit_marine", world_space = true, doer = "Spike", classname = "Marine", done = true},
+            {sound = "sound/ns2.fev/alien/common/spike_hit_marine", world_space = true, doer = "Spikes", classname = "Marine", done = true},
             {sound = "sound/ns2.fev/alien/skulk/bite_hit_marine", doer = "BiteLeap", classname = "Marine", done = true},
             {sound = "sound/ns2.fev/alien/skulk/bite_hit_%s", doer = "BiteLeap", done = true},
             {sound = "sound/ns2.fev/alien/skulk/parasite_hit", doer = "Parasite", done = true},
             {sound = "sound/ns2.fev/alien/gorge/spit_hit", doer = "Spit", done = true},
             {sound = "sound/ns2.fev/alien/gorge/bilebomb_hit", doer = "Bomb", done = true},
-            //{sound = "sound/ns2.fev/materials/%s/spike_ricochet", doer = "Spike", done = true},
             //{sound = "sound/ns2.fev/materials/%s/spike_ricochet", doer = "Spikes", done = true},
             //{sound = "sound/ns2.fev/materials/%s/spikes_ricochet", doer = "HydraSpike", done = true},
             {sound = "sound/ns2.fev/materials/%s/scrape", doer = "SwipeBlink", done = true},
@@ -113,6 +112,15 @@ kAlienWeaponEffects =
         },
     },
     
+    burst_attack =
+    {
+        burstAttackEffects = 
+        {
+            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed_pierce"},
+            {viewmodel_animation = "bite_leap"},
+        },
+    },  
+    
     bite_attack =
     {
         biteAttackSounds =
@@ -126,13 +134,13 @@ kAlienWeaponEffects =
             {
             viewmodel_animation = 
               {
-              {1, "bite_attack"}, speed = 10
+              {1, "bite_attack"},
               //{.5, "bite_attack2"},
               //{.5, "bite_attack3"},
               //{.5, "bite_attack4"},
               },
             },
-            //{overlay_animation = "bite", force = true},
+            {overlay_animation = "bite", force = true},
         },
     },
     
@@ -179,6 +187,23 @@ kAlienWeaponEffects =
             {sound = "sound/ns2.fev/alien/skulk/parasite_hit", world_space = true},
             {player_cinematic = "cinematics/alien/skulk/parasite_hit.cinematic"},
         },
+    },
+    
+    xenocide_attack_explode =
+    {
+    	xenosideAttackExplodeEffects =
+    	{
+    		{sound = "sound/ns2.fev/marine/rifle/explode"},
+    		{cinematic = "cinematics/alien/skulk/xenocide.cinematic"},
+    	}
+    },
+    
+    xenocide_attack =
+    {
+    	xenosideAttackEffects =
+    	{
+    		{sound = "sound/ns2.fev/alien/structures/hive_death"},
+    	}
     },
     
     spitspray_attack =
@@ -344,8 +369,6 @@ kAlienWeaponEffects =
     {
         spikeAttackAnims = 
         {
-            //{overlay_animation = "snipe"}, 
-            //{viewmodel_animation = "spikes_snipe", done = true},
             {overlay_animation = "spike"},     
             {viewmodel_animation = "spikes_attack_l", left = true, done = true},
             {viewmodel_animation = "spikes_attack_r", left = false, done = true},
@@ -379,51 +402,25 @@ kAlienWeaponEffects =
             {overlay_animation = "spore"},            
         },
     },  
-    
-    // Play snipe sound where it hits so players know what's going on (played at spot in world where spike hits - not for a target)
-    spikes_snipe_miss =
-    {
-        spikesSnipeEffects =
-        {
-            {player_cinematic = "cinematics/alien/lerk/snipe_impact.cinematic"},
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed", upgraded = false, done = true},
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed_pierce", upgraded = true, done = true},           
-        },
-    },
-    
-    // Played for unit that is hit with sniped lerk
-    spikes_snipe_hit =
-    {
-        spikesSnipedEffects =
-        {
-            {player_cinematic = "cinematics/alien/lerk/snipe_impact.cinematic"},
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed", upgraded = false, done = true},
-            {sound = "sound/ns2.fev/alien/lerk/spikes_zoomed_pierce", upgraded = true, done = true},           
-        },
-    },
 
     spores_attack =
     {
         sporesAttackEffects = 
         {
-            {sound = "sound/ns2.fev/alien/lerk/spores_shoot"},
+            {looping_sound = "sound/ns2.fev/alien/lerk/spore_spray"},
+			{overlay_animation = "spore"},
+  
             {viewmodel_animation = "spores_attack"},
             {overlay_animation = "spore"},
-            
-            //{viewmodel_cinematic = "cinematics/alien/lerk/spore_view_fire.cinematic", attach_point = "?"},
-            //{weapon_cinematic = "cinematics/alien/lerk/spores.cinematic", attach_point = "?"},
-        },
+      },
     },
-    
-    sporemine_attack =
+	
+    spores_attack_end =
     {
-        sporemineAttackEffects = 
+        sporesAttackEndEffects = 
+
         {
-            {sound = "sound/ns2.fev/alien/gorge/bilebomb"},
-            {viewmodel_animation = "spores_attack"},
-            {overlay_animation = "spore"},
-            {viewmodel_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", attach_point = "fxnode_hole_left"},
-            //{viewmodel_cinematic = "cinematics/alien/gorge/bilebomb_impact.cinematic", attach_point = "fxnode_hole_right"},
+            {stop_sound = "sound/ns2.fev/alien/lerk/spore_spray"},
         },
     },
     
@@ -433,6 +430,18 @@ kAlienWeaponEffects =
         {
             {sound = "sound/ns2.fev/alien/lerk/spores_hit"},
             {cinematic = "cinematics/alien/lerk/spore_impact.cinematic"},
+        },
+    },
+    
+    spores_alt_attack =
+
+    {
+        sporesAttackEffects = 
+
+        {
+            {sound = "sound/ns2.fev/alien/lerk/spores_shoot"},
+            {viewmodel_animation = "spores_attack"},
+            {overlay_animation = "spore"},
         },
     },
     

@@ -23,16 +23,19 @@ end
 
 function LifeFormEgg:OnUse(player, elapsedTime, useAttachPoint, usePoint)
 
-	local teamNum = self:GetTeamNumber()
-	local allowed = self:GetAllowedToUse(player)
-    if self:GetIsBuilt() and self:GetIsActive() and (teamNum == player:GetTeamNumber()) and allowed then
-
-		if Server then
-		if self:EvolvePlayer(player) then
-			DestroyEntity(self)
-		end
-		end
-        
+	if Server then
+	
+		local teamNum = self:GetTeamNumber()
+		local allowed = self:GetAllowedToUse(player)
+	    if self:GetIsBuilt() and self:GetIsActive() and (teamNum == player:GetTeamNumber()) and allowed then
+	
+			
+			if self:EvolvePlayer(player) then
+				DestroyEntity(self)
+			end
+	        
+	    end
+    
     end
     
 end

@@ -611,6 +611,9 @@ function AlienTeam:InitTechTree()
     self.techTree:AddResearchNode(kTechId.RegenerationTech, kTechId.Crag, kTechId.None)
     self.techTree:AddBuyNode(kTechId.Regeneration, kTechId.RegenerationTech, kTechId.None, kTechId.AllAliens)
 
+    self.techTree:AddResearchNode(kTechId.RedemptionTech, kTechId.Crag, kTechId.None)
+    self.techTree:AddBuyNode(kTechId.Redemption, kTechId.RedemptionTech, kTechId.None, kTechId.AllAliens)
+
     self.techTree:AddResearchNode(kTechId.FrenzyTech,             kTechId.Whip,                kTechId.None)
     self.techTree:AddBuyNode(kTechId.Frenzy,             kTechId.FrenzyTech,                kTechId.None,     kTechId.AllAliens)
     

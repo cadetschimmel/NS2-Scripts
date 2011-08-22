@@ -99,6 +99,8 @@ function Alien:OnInit()
 
     self.armor = self:GetArmorAmount()
     self.maxArmor = self.armor
+    
+    self.hasRedemption = false
 
 end
 
@@ -242,7 +244,7 @@ function Alien:OnUpdate(deltaTime)
         if (hadTwoHives and not self.twoHives) or (hadThreeHives and not self.threeHives) then
         
         	// switch to slot 1, the alien is not allowed to further use his ability
-        	if not self:GetActiveWeapon():CanUseWeapon() then
+        	if not self:GetActiveWeapon():CanUseWeapon(self) then
         		self:SwitchWeapon(1)
         	end
         
@@ -397,6 +399,17 @@ function Alien:GetPlayerStatusDesc()
     end
     
     return status
+
+end
+
+// small hack to keep sure redemption works, checking with gethasupgrade doesn't work on kill
+function Alien:OnGiveUpgrade(upgradeId)
+
+	if Server then
+	    if upgradeId == kTechId.Redemption then
+	    	self.hasRedemption = true
+		end
+	end
 
 end
 

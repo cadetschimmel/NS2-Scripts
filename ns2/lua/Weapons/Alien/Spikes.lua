@@ -28,9 +28,18 @@ Spikes.kZoomedSensScalar = 0.25
 Spikes.kSpikeEnergy = kSpikeEnergyCost
 Spikes.kSnipeEnergy = kSpikesAltEnergyCost
 Spikes.kSnipeDamage = kSpikesAltDamage
-Spikes.kSpread2Degrees = Vector( 0.01745, 0.01745, 0.01745 )
-Spikes.kRange = 20
+Spikes.kRange = kSpikeMinDamageRange
 Spikes.zoomFaktorScalar = 1
+
+// Does full damage up close then falls off over the max distance
+Spikes.kMaxDamage = kSpikeMaxDamage
+Spikes.kMinDamage = kSpikeMinDamage
+
+// used for the hit scan
+Spikes.kSpread = Math.Radians(6)
+
+// used for the projectile effect
+Spikes.kSpread2Degrees = Vector( 0.01745, 0.01745, 0.01745 )
 
 local networkVars =
 {
@@ -95,15 +104,16 @@ function Spikes:PerformPrimaryAttack(player)
 
     // Alternate view model animation to fire left then right
     self.fireLeftNext = not self.fireLeftNext
-	self:FireSpikeProjectile(player)        
-
+    
+    // fire a visual projectile, deals no damage
+	//self:FireSpikeProjectile(player)
+	
+	// hit scan shot, deals damage
+	self:FireSpike(player)
+	
     player:SetActivityEnd(player:AdjustFuryFireDelay(self:GetPrimaryAttackDelay()))
     
     return true
-end
-
-function Spikes:GetSpread()
-    return Math.Radians(10)
 end
 
 function Spikes:GetInaccuracyScalar()
@@ -179,11 +189,14 @@ function Spikes:FireSpikeProjectile(player)
         spike:SetDeathIconIndex(self:GetDeathIconIndex())
                 
     end
-    
-    local hitTarget = false
+
+end
+
+function Spikes:FireSpike(player)
+
     local viewAngles = player:GetViewAngles()
     local viewCoords = viewAngles:GetCoords()
-    local range = self:GetMaxRange()
+    
     local startPoint = player:GetEyePos()
         
     // Filter ourself out of the trace so that we don't hit ourselves.
@@ -192,86 +205,51 @@ function Spikes:FireSpikeProjectile(player)
     if Client then
         DbgTracer.MarkClientFire(player, startPoint)
     end
-   
-
-
-    // Calculate spread for each shot, in case they differ
-    local spreadAngle = self:GetSpread() * self:GetInaccuracyScalar() / 2
     
+    // Calculate spread for each shot, in case they differ    
     local randomAngle  = NetworkRandom() * math.pi * 2
-    local randomRadius = NetworkRandom() * NetworkRandom() * math.tan(spreadAngle)
-    
+    local randomRadius = NetworkRandom() * NetworkRandom() * math.tan(Spikes.kSpread)    
     local fireDirection = viewCoords.zAxis + (viewCoords.xAxis * math.cos(randomAngle) + viewCoords.yAxis * math.sin(randomAngle)) * randomRadius
     fireDirection:Normalize()
    
-    local endPoint = startPoint + fireDirection * range
-    
+    local endPoint = startPoint + fireDirection * Spikes.kRange    
     local trace = Shared.TraceRay(startPoint, endPoint, PhysicsMask.Bullets, filter)
     
     if Server then
         Server.dbgTracer:TraceBullet(player, startPoint, trace)  
     end
     
-    if (trace.fraction < 1) then
+    if trace.fraction < 1 and trace.entity then
+    
+        if trace.entity:isa("LiveScriptActor") and Server and GetGamerules():CanEntityDoDamageTo(self, trace.entity) then
         
-        // Create local tracer effect, and send to other players
-        if (NetworkRandom(string.format("%s:FireBullet():TracerCheck", self:GetClassName())) < self:GetTracerPercentage()) then
-        
-            local tracerStart = startPoint + player:GetViewAngles():GetCoords().zAxis
-            local tracerVelocity = GetNormalizedVector(trace.endPoint - tracerStart) * 45
-            TriggerTracer(player, tracerStart, trace.endPoint, tracerVelocity)
+            // Do max damage for short time and then fall off over time to encourage close quarters combat instead of 
+            // hanging back and sniping
+            local damageScalar = ConditionalValue(player:GetHasUpgrade(kTechId.Piercing), kPiercingDamageScalar, 1)
+            local distToTarget = (trace.endPoint - startPoint):GetLength()
             
-        end
-        
-        //DebugLine(startPoint, trace.endPoint, 15, ConditionalValue(trace.entity, 1, 0), ConditionalValue(trace.entity, 0, 1), ConditionalValue(trace.entity, 0, 0), 1)
-
-        
-        if trace.entity then
-        
+            // Have damage increase to reward close combat
+            local damageDistScalar = Clamp(1 - (distToTarget / Spikes.kRange), 0, 1)
+            local damage = Spikes.kMinDamage + damageDistScalar * (Spikes.kMaxDamage - Spikes.kMinDamage)            
             local direction = (trace.endPoint - startPoint):GetUnit()
-            self:ApplyBulletGameplayEffects(player, trace.entity, trace.endPoint, direction)
-            hitTarget = true
-
-        end
-                    
-        // TODO: Account for this
-        // Play ricochet sound for player locally for feedback, but not necessarily for every bullet
-        local effectFrequency = self:GetRicochetEffectFrequency()
-        
-        
-            local impactPoint = trace.endPoint - GetNormalizedVector(endPoint - startPoint) * Weapon.kHitEffectOffset
-            local surfaceName = trace.surface
-            TriggerHitEffects(self, trace.entity, impactPoint, surfaceName, false)
-            
-            // If we are far away from our target, trigger a private sound so we can hear we hit something
-            if surfaceName and string.len(surfaceName) > 0 and (trace.endPoint - player:GetOrigin()):GetLength() > 5 then
-                
-                player:TriggerEffects("hit_effect_local", {surface = surfaceName})
-                
-            end
-        
-        // Update accuracy
-        //self.accuracy = math.max(math.min(1, self.accuracy - self:GetAccuracyLossPerShot(player)), 0)
-
-    end
-    
-    return hitTarget 
-
-end
-
-function Spikes:ApplyBulletGameplayEffects(player, target, endPoint, direction)
-
-    if(Server) then
-    
-        if target:isa("LiveScriptActor") and GetGamerules():CanEntityDoDamageTo(player, target) then
-        
-            target:TakeDamage(self:GetSpikeDamage(player, target, endPoint), player, self, endPoint, direction)
+            trace.entity:TakeDamage(damage * damageScalar, player, self, self:GetOrigin(), direction)
             
         end
-    
-        self:GetParent():SetTimeTargetHit()
-        
+
+
+        // If we are far away from our target, trigger a private sound so we can hear we hit something
+        if (trace.endPoint - player:GetOrigin()):GetLength() > 5 then
+            
+            player:TriggerEffects("hit_effect_local", {surface = trace.surface})
+            
+        end
+            
     end
+    
+    // Play hit effects on ground, on target or in the air if it missed
+    local impactPoint = trace.endPoint
+    local surfaceName = trace.surface
+    TriggerHitEffects(self, trace.entity, impactPoint, surfaceName)
     
 end
 

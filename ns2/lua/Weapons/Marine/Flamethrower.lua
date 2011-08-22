@@ -100,31 +100,38 @@ end
 
 function Flamethrower:ShootFlame(player)
 
-    if Server then
+
 
     local viewAngles = player:GetViewAngles()
     local viewCoords = viewAngles:GetCoords()
-    local startPoint = self:GetBarrelPoint(player) + viewCoords.xAxis * (-0.4) + viewCoords.yAxis * (-0.3) + viewCoords.zAxis * 0.6
+    local startPoint = self:GetBarrelPoint(player) + viewCoords.xAxis * (-0.4) + viewCoords.yAxis * (-0.3)
+    local endPoint = self:GetBarrelPoint(player) + viewCoords.xAxis * (-0.4) + viewCoords.yAxis * (-0.3) + viewCoords.zAxis * 1.8
 
-	//if Client then
-    //	self:TriggerEffects("flame_start", {effecthostcoords = Coords.GetTranslation(startPoint + viewCoords.zAxis * 1.5) } )
-    //end
-
-    local flame = CreateEntity(Flame.kMapName, startPoint, player:GetTeamNumber())
-    SetAnglesFromVector(flame, viewCoords.zAxis)
-    
-    flame:SetPhysicsType(Actor.PhysicsType.Kinematic)
-    
-    local startVelocity = viewCoords.zAxis * Flamethrower.kFlameSpeed
-    flame:SetVelocity(startVelocity)
-    
-    flame:SetGravityEnabled(true)
-    
-    // Set flame owner to player so we don't collide with ourselves and so we
-    // can attribute a kill to us and not setting yourself on fire
-    flame:SetOwner(player)
-    
+	// local effect
+	if Client then
+	    self:TriggerEffects("flames_small", {effecthostcoords = Coords.GetTranslation(startPoint + viewCoords.zAxis * 1.1) } )
+    	self:TriggerEffects("flames_small", {effecthostcoords = Coords.GetTranslation(startPoint + viewCoords.zAxis * 1.4) } )
+    	self:TriggerEffects("flames_small", {effecthostcoords = Coords.GetTranslation(startPoint + viewCoords.zAxis * 1.7) } )
     end
+    
+    if Server then    
+	    local trace = Shared.TraceRay(startPoint, endPoint, PhysicsMask.AllButPCs, EntityFilterOne(player))
+	    startPoint = trace.endPoint
+	
+	    local flame = CreateEntity(Flame.kMapName, startPoint, player:GetTeamNumber())
+	    SetAnglesFromVector(flame, viewCoords.zAxis)
+	    
+	    flame:SetPhysicsType(Actor.PhysicsType.Kinematic)
+	    
+	    local startVelocity = viewCoords.zAxis * Flamethrower.kFlameSpeed
+	    flame:SetVelocity(startVelocity)
+	    
+	    flame:SetGravityEnabled(true)
+	    
+	    // Set flame owner to player so we don't collide with ourselves and so we
+	    // can attribute a kill to us and not setting yourself on fire
+	    flame:SetOwner(player)    
+   end
     
 end
 

@@ -8,6 +8,7 @@
 Script.Load("lua/Utility.lua")
 Script.Load("lua/Weapons/Alien/BiteLeap.lua")
 Script.Load("lua/Weapons/Alien/Parasite.lua")
+Script.Load("lua/Weapons/Alien/XenocideLeap.lua")
 Script.Load("lua/Alien.lua")
 Script.Load("lua/Mixins/GroundMoveMixin.lua")
 Script.Load("lua/Mixins/CameraHolderMixin.lua")
@@ -44,7 +45,7 @@ Skulk.networkVars =
 }
 
 // Balance, movement, animation
-Skulk.kJumpRepeatTime = .35
+Skulk.kJumpRepeatTime = .38
 Skulk.kViewOffsetHeight = .55
 Skulk.kHealth = kSkulkHealth
 Skulk.kArmor = kSkulkArmor
@@ -76,7 +77,7 @@ Skulk.kAnimEndLeap = "leap_end"
 Skulk.kAnimLeap = "leap"
 
 Skulk.kWallJumpBoostTime = 0.9 // before it drops off
-Skulk.kBoostPerJumpFactor = 1 // increase this to make each boost / jump more effective
+Skulk.kBoostPerJumpFactor = 1.5 // increase this to make each boost / jump more effective
 Skulk.kBoostedMaxSpeed = 15
 Skulk.kOnGroundBoostTimeTolerance = .35 // this number describes how good your timing has to be
 
@@ -112,6 +113,7 @@ function Skulk:OnInit()
     self.timeOnSurface = 0
     
     self.currentMaxSpeed = Skulk.kMaxSpeed // initial maximum speed can be increased by walljumping and leaping
+    self.timeXenocideStart = nil
 
 end
 
@@ -393,7 +395,7 @@ function Skulk:PreUpdateMove(input, runningPrediction)
     
     	// lose some of your additional speed when sticking too long on a surface
 		if Shared.GetTime() - self.timeOnSurface > Skulk.kOnGroundBoostTimeTolerance then
-			self:SlowDown(2*Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed)
+			self:SlowDown(3*Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed)
 			self.timeOnSurface = Shared.GetTime()
 		end
     
@@ -402,16 +404,22 @@ function Skulk:PreUpdateMove(input, runningPrediction)
     	// seems that we landed on some surface, initialize the timer if we have boosted max speed
     	if self:GetCanJump() and (self.currentMaxSpeed > Skulk.kMaxSpeed) then
     		self.timeOnSurface = Shared.GetTime() // trigger slowdown time window
-    		//Print("landed")
 		end		
 		
 	end
 	
-	// always slowdown a bit when current velocity is slower than boosted, in case we hit some obstacle on ground or in mid air
-	if (self.currentMaxSpeed ~= Skulk.kMaxSpeed) and (self.currentMaxSpeed - self:GetVelocity():GetLength() > .2) then
-		self.currentMaxSpeed = Clamp(self.currentMaxSpeed - (self.currentMaxSpeed - self:GetVelocity():GetLength()) * 1.2* input.time, Skulk.kMaxSpeed, Skulk.kBoostedMaxSpeed)
-		//Print("slowdown by obstacle")
+	if (self.currentMaxSpeed ~= Skulk.kMaxSpeed) and (self:GetVelocity():GetLength() < Skulk.kMaxSpeed) then
+		self.currentMaxSpeed = Skulk.kMaxSpeed
+		self.timeOnSurface = 0
 	end	
+
+end
+
+function Skulk:OnUpdate(deltaTime)
+
+	Alien.OnUpdate(self, deltaTime)
+
+	self:UpdateXenocide()
 
 end
 
@@ -491,6 +499,33 @@ function Skulk:UpdateCrouch()
 
     // Skulks cannot crouch!
     
+end
+
+function Skulk:UpdateXenocide()
+
+	if Server then
+	
+		if self.timeXenocideStart then
+		
+			if Shared.GetTime() - self.timeXenocideStart > XenocideLeap.kDelay then
+			
+				if self:GetIsAlive() then
+				
+					self:TriggerEffects("xenocide_attack_explode")					
+					local hitEntities = GetEntitiesForTeamWithinRange("LiveScriptActor", GetEnemyTeamNumber(self:GetTeamNumber()), self:GetOrigin(), Grenade.kDamageRadius)
+	       			table.insertunique(hitEntities, self)
+	       			RadiusDamage(hitEntities, self:GetOrigin(), XenocideLeap.kRadius, XenocideLeap.kMaxDamage, self)
+	       			
+       			end
+       			
+       			self.timeXenocideStart = nil
+       
+       		end
+       		
+   		end	
+	
+	end
+
 end
 
 function Skulk:AdjustModelCoords(modelCoords)
@@ -736,28 +771,44 @@ function Skulk:HandleJump(input, velocity)
 	    // important: set this to zero when jumping, otherwise slow down kicks in when in the air
 	    self.timeOnSurface = 0
 
-        local kWallJumpForce = 12
-        local playerViewDirection = self:GetViewAngles():GetCoords().zAxis * 2
+        local kWallJumpForce = 10
+        local kWallJumpMaxUpwardForce = 12
+        local jumpsAwayFromWall = false
+        
+        local playerViewDirection = self:GetViewAngles():GetCoords().zAxis
 
-        local kWallJumpVelocity = Clamp(kWallJumpForce + self:GetVelocity():GetLength() * 2, kWallJumpForce, kWallJumpForce+self.currentMaxSpeed)
-        local wallJumpVelocity = self.wallWalkingNormalCurrent*kWallJumpVelocity + playerViewDirection
-        wallJumpVelocity:Normalize()
-        wallJumpVelocity:Scale(kWallJumpVelocity)
+        local kWallJumpVelocity = Clamp(kWallJumpForce + self:GetVelocity():GetLength(), kWallJumpForce, kWallJumpForce+self.currentMaxSpeed)
+        local wallJumpDirection = self.wallWalkingNormalCurrent*kWallJumpVelocity
+        
+		if (playerViewDirection:DotProduct(self.wallWalkingNormalCurrent) > 0) then
+		
+			// give more weigth to viewdirection if facing away from wall
+			wallJumpDirection = wallJumpDirection + playerViewDirection*10
+			jumpsAwayFromWall = true
+			
+		end
+        
+        wallJumpDirection:Normalize()
+        wallJumpDirection:Scale(kWallJumpVelocity)
+        
+        local upwardsVelocity = Clamp(2 + (playerViewDirection.y) * 11, -5, kWallJumpMaxUpwardForce)
+        
+        Print(tostring(upwardsVelocity))
 
-        velocity.x = velocity.x + wallJumpVelocity.x
-        velocity.y = Clamp((playerViewDirection.y + self.wallWalkingNormalCurrent.y) * 6, -4, kWallJumpForce / 2)
-        velocity.z = velocity.z + wallJumpVelocity.z
+        velocity.x = velocity.x + wallJumpDirection.x
+        velocity.y = upwardsVelocity
+        velocity.z = velocity.z + wallJumpDirection.z
         
         //Print("velocity difference, current:(%s) after(%s)", tostring(self:GetVelocity()), tostring(velocity))
         self:SetVelocity(velocity)
         
         self:SetOverlayAnimation(Player.kAnimStartJump)
         
-        local kAllowedBoostInterval = 0.5
+        local kAllowedBoostInterval = 0.55
         
         // TODO: conditions when to trigger the boost? angle of current and new velocity should not be too sharp?
-        if velocity:GetLength() > self.currentMaxSpeed and ( (Shared.GetTime() - self.timeOfLastJump) > kAllowedBoostInterval) then
-        	self:Accelerate(Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed + 2*Skulk.kBoostPerJumpFactor)
+        if jumpsAwayFromWall and (velocity:GetLength() > self.currentMaxSpeed) and ( (Shared.GetTime() - self.timeOfLastJump) > kAllowedBoostInterval) then
+        	self:Accelerate(Skulk.kBoostPerJumpFactor, Skulk.kMaxSpeed + 3*Skulk.kBoostPerJumpFactor)
         end
 	
     	self.timeOfLastJump = Shared.GetTime()
@@ -818,6 +869,26 @@ function Skulk:GetIsKnockbackAllowed()
 
     return not self:GetIsOnGround() and not self:GetIsWallWalking()
 
+end
+
+/**
+* Used for xenocide only, to not allow cancelation of xenocide once triggered
+*/
+if Server then
+
+	function Skulk:TriggerXenocideTimer()
+	
+		local success = false
+	
+		if not self.timeXenocideStart then
+			self.timeXenocideStart = Shared.GetTime()
+			success = true
+		end
+		
+		return success
+	
+	end
+	
 end
 
 Shared.LinkClassToMap( "Skulk", Skulk.kMapName, Skulk.networkVars )

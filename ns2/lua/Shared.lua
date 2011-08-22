@@ -125,6 +125,7 @@ Script.Load("lua/Gorge.lua")
 Script.Load("lua/Lerk.lua")
 Script.Load("lua/Fade.lua")
 Script.Load("lua/Onos.lua")
+Script.Load("lua/Crawler.lua")
 
 // Weapons
 Script.Load("lua/Weapons/Marine/ClipWeapon.lua")

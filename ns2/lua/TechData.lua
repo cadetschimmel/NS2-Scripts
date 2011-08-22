@@ -283,6 +283,7 @@ function BuildTechData()
         { [kTechDataId] = kTechId.ARCUndeploy,          [kTechDataCostKey] = 0,                                         [kTechDataResearchTimeKey] = kARCUndeployTime, [kTechDataDisplayName] = "ARC_UNDEPLOY",                    [kTechDataMenuPriority] = 2, [kTechDataHotkey] = Move.D, [kTechDataTooltipInfo] = "ARC_UNDEPLOY_TOOLTIP"},
 
         // Alien abilities for damage types
+        { [kTechDataId] = kTechId.Burst,                  [kTechDataMapName] = BurstEvolve.kMapName,        [kTechDataDamageType] = kBurstDamageType,        [kTechDataModel] = "", [kTechDataDisplayName] = "BURST"},
         { [kTechDataId] = kTechId.Bite,                  [kTechDataMapName] = BiteLeap.kMapName,        [kTechDataDamageType] = kBiteDamageType,        [kTechDataModel] = "", [kTechDataDisplayName] = "BITE"},
         { [kTechDataId] = kTechId.Parasite,              [kTechDataMapName] = Parasite.kMapName,        [kTechDataDamageType] = kParasiteDamageType,    [kTechDataModel] = "", [kTechDataDisplayName] = "PARASITE"},
         { [kTechDataId] = kTechId.Spit,                  [kTechDataMapName] = SpitSpray.kMapName,       [kTechDataDamageType] = kSpitDamageType,        [kTechDataModel] = "", [kTechDataDisplayName] = "SPIT"},
@@ -345,7 +346,7 @@ function BuildTechData()
         { [kTechDataId] = kTechId.UpgradeWhip,           [kTechDataMapName] = Whip.kMapName,                         [kTechDataDisplayName] = "MATURE_WHIP_UPGRADE",  [kTechDataCostKey] = kMatureWhipCost, [kTechDataResearchTimeKey] = kMatureWhipResearchTime, [kTechDataHotkey] = Move.U, [kTechDataModel] = Whip.kModelName, [kTechDataTooltipInfo] = "UPGRADE_WHIP_TOOLTIP", [kTechDataGrows] = true },
         { [kTechDataId] = kTechId.MatureWhip,            [kTechDataMapName] = MatureWhip.kMapName,                   [kTechDataDisplayName] = "MATURE_WHIP",  [kTechDataModel] = Whip.kModelName, [kTechDataCostKey] = kMatureWhipCost, [kTechDataRequiresInfestation] = true, [kTechDataBuildTime] = kMatureWhipBuildTime,       [kTechDataMaxHealth] = kMatureWhipHealth,  [kTechDataMaxArmor] = kMatureWhipArmor,  [kTechDataInitialEnergy] = kMatureWhipInitialEnergy,      [kTechDataMaxEnergy] = kMatureWhipMaxEnergy, [kTechDataPointValue] = kMatureWhipPointValue, [kVisualRange] = Whip.kRange, [kTechDataTooltipInfo] = "MATURE_WHIP_TOOLTIP", [kTechDataGrows] = true, [kTechDataUpgradeTech] = kTechId.Whip },
         
-        { [kTechDataId] = kTechId.Shift,                 [kTechDataMapName] = Shift.kMapName,                        [kTechDataDisplayName] = "SHIFT", [kTechDataRequiresInfestation] = true, [kTechDataCostKey] = kShiftCost,    [kTechDataHotkey] = Move.S,        [kTechDataBuildTime] = kShiftBuildTime, [kTechDataModel] = Shift.kModelName,           [kTechDataMaxHealth] = kShiftHealth,  [kTechDataMaxArmor] = kShiftArmor,  [kTechDataInitialEnergy] = kShiftInitialEnergy,      [kTechDataMaxEnergy] = kShiftMaxEnergy, [kTechDataPointValue] = kShiftPointValue, [kVisualRange] = kEnergizeRange, [kTechDataTooltipInfo] = "SHIFT_TOOLTIP", [kTechDataGrows] = false },
+        { [kTechDataId] = kTechId.Shift,     [kTechDataImplemented] = false,            [kTechDataMapName] = Shift.kMapName,                        [kTechDataDisplayName] = "SHIFT", [kTechDataRequiresInfestation] = true, [kTechDataCostKey] = kShiftCost,    [kTechDataHotkey] = Move.S,        [kTechDataBuildTime] = kShiftBuildTime, [kTechDataModel] = Shift.kModelName,           [kTechDataMaxHealth] = kShiftHealth,  [kTechDataMaxArmor] = kShiftArmor,  [kTechDataInitialEnergy] = kShiftInitialEnergy,      [kTechDataMaxEnergy] = kShiftMaxEnergy, [kTechDataPointValue] = kShiftPointValue, [kVisualRange] = kEnergizeRange, [kTechDataTooltipInfo] = "SHIFT_TOOLTIP", [kTechDataGrows] = false },
         { [kTechDataId] = kTechId.UpgradeShift,          [kTechDataMapName] = Shift.kMapName,                        [kTechDataDisplayName] = "MATURE_SHIFT_UPGRADE", [kTechDataImplemented] = false, [kTechDataCostKey] = kMatureShiftCost, [kTechDataResearchTimeKey] = kMatureShiftResearchTime, [kTechDataHotkey] = Move.U, [kTechDataTooltipInfo] = "UPGRADE_SHIFT_TOOLTIP", [kTechDataGrows] = true },
         { [kTechDataId] = kTechId.MatureShift,           [kTechDataMapName] = MatureShift.kMapName,                  [kTechDataDisplayName] = "MATURE_SHIFT", [kTechDataImplemented] = false, [kTechDataCostKey] = kMatureShiftCost, [kTechDataModel] = Shift.kModelName,     [kTechDataBuildTime] = kMatureShiftBuildTime,      [kTechDataMaxHealth] = kMatureShiftHealth, [kTechDataMaxArmor] = kMatureShiftArmor,   [kTechDataMaxEnergy] = kMatureShiftMaxEnergy,      [kTechDataMaxEnergy] = kMatureShiftMaxEnergy, [kTechDataPointValue] = kMatureShiftPointValue, [kTechDataTooltipInfo] = "MATURE_SHIFT_TOOLTIP", [kTechDataGrows] = true },
         
@@ -393,6 +394,9 @@ function BuildTechData()
         { [kTechDataId] = kTechId.Embryo,                [kTechDataMapName] = Embryo.kMapName, [kTechDataGestateName] = Embryo.kMapName,                     [kTechDataDisplayName] = "EMBRYO", [kTechDataModel] = Embryo.kModelName, [kTechDataMaxExtents] = Vector(Embryo.kXExtents, Embryo.kYExtents, Embryo.kZExtents)},
         { [kTechDataId] = kTechId.AlienCommander,        [kTechDataMapName] = AlienCommander.kMapName, [kTechDataDisplayName] = "ALIEN COMMANDER", [kTechDataModel] = ""},
 
+		// special crawler lifeform
+		{ [kTechDataId] = kTechId.Crawler,            	 [kTechDataMapName] = Crawler.kMapName, [kTechDataGestateName] = Crawler.kMapName,                      [kTechDataGestateTime] = kSkulkGestateTime, [kTechDataDisplayName] = "CRAWLER",           [kTechDataModel] = Crawler.kModelName, [kTechDataCostKey] = kSkulkCost, [kTechDataMaxHealth] = Crawler.kMaxHealth, [kTechDataMaxArmor] = Crawler.kMaxArmor, [kTechDataEngagementDistance] = kPlayerEngagementDistance, [kTechDataMaxExtents] = Vector(Skulk.kXExtents, Skulk.kYExtents, Skulk.kZExtents), [kTechDataPointValue] = kSkulkPointValue},
+ 
         
         { [kTechDataId] = kTechId.LerkTech,                  [kTechDataDisplayName] = "LERK", [kTechDataHotkey] = Move.Z, [kTechDataCostKey] = kLerkResearchCost, [kTechDataResearchTimeKey] =  kLerkResearchTime},        
         { [kTechDataId] = kTechId.FadeTech,                  [kTechDataDisplayName] = "FADE", [kTechDataHotkey] = Move.X, [kTechDataCostKey] = kFadeResearchCost, [kTechDataResearchTimeKey] =  kFadeResearchTime},        
@@ -413,6 +417,7 @@ function BuildTechData()
         
         { [kTechDataId] = kTechId.CarapaceTech,                   [kTechDataDisplayName] = "CARAPACE", [kTechDataImplemented] = false,  [kTechDataCostKey] = kCarapaceResearchCost, [kTechDataResearchTimeKey] = kCarapaceResearchTime },                
         { [kTechDataId] = kTechId.RegenerationTech,               [kTechDataDisplayName] = "REGENERATION", [kTechDataImplemented] = false,  [kTechDataCostKey] = kRegenerationResearchCost, [kTechDataResearchTimeKey] = kRegenerationResearchTime },                
+        { [kTechDataId] = kTechId.RedemptionTech,               [kTechDataDisplayName] = "REDEMPTION", [kTechDataImplemented] = true,  [kTechDataCostKey] = kRedemptionResearchCost, [kTechDataResearchTimeKey] = kRedemptionResearchTime },                
 
         { [kTechDataId] = kTechId.CamouflageTech,             [kTechDataDisplayName] = "CAMOUFLAGE", [kTechDataCostKey] = kCamouflageResearchCost, [kTechDataResearchTimeKey] =  kCamouflageResearchTime},
 
@@ -433,6 +438,7 @@ function BuildTechData()
         // Lifeform purchases
         { [kTechDataId] = kTechId.Carapace,                  [kTechDataDisplayName] = "CARAPACE",  [kTechDataCostKey] = kCarapaceCost },        
         { [kTechDataId] = kTechId.Regeneration,              [kTechDataDisplayName] = "REGENERATION",  [kTechDataCostKey] = kRegenerationCost },        
+        { [kTechDataId] = kTechId.Redemption,              [kTechDataDisplayName] = "REDEMPTION",  [kTechDataCostKey] = kRedemptionCost },        
         { [kTechDataId] = kTechId.Leap,                  [kTechDataDisplayName] = "LEAP", [kTechDataCostKey] = kLeapCost },        
         { [kTechDataId] = kTechId.BileBomb,                  [kTechDataDisplayName] = "BILEBOMB", [kTechDataCostKey] = kBileBombCost },        
         { [kTechDataId] = kTechId.DropStructureAbility,                  [kTechDataDisplayName] = "DROP_STRUCTURE",  [kTechDataCostKey] = kDropStructureAbilityCost /* cost for purchasing ability */ },        

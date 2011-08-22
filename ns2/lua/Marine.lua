@@ -85,7 +85,7 @@ Marine.kWeldedEffectsInterval = .5
 
 Marine.kJetpackGravity = -12
 
-Marine.kJetpackBaseAcceleration = 14.5
+Marine.kJetpackBaseAcceleration = 16
 Marine.kJetPackUpgradeAcceleration = kJetpackUpgradeAcceleration
 
 Marine.kJetpackTakeOffTime = .5
@@ -128,7 +128,7 @@ Marine.networkVars =
     jetpackFuel                     = "float",
     
     jetpackFuelRate					= "float",
-    jetpackAccelerationBonus		= "interger (0 to 1)",
+    jetpackAccelerationBonus		= "integer (0 to 1)",
     
     weaponShouldLiftDuration        = "float",
     weaponLiftInactiveTime          = "float",
@@ -1267,12 +1267,7 @@ function Marine:ModifyVelocity(input, velocity)
 		else
 			velocity.y = Clamp(velocity.y + self:GetAcceleration()*input.time *2.8, -self:GetMaxSpeed(), self:GetMaxSpeed() / 3)
 		end
-		
-	// TakeOff mode
-    //elseif (self:GetJetPackState(input) == 3) then
-    //	if self:GetIsOnGround() then
-    //		velocity.y = 0.5
-	//	end
+
     end
 	
 end
@@ -1292,30 +1287,30 @@ end
 
 function Marine:GetAcceleration()
 
+	local acceleration = 0
+	
 	if self:GetIsEthereal() then
-		return 15
+		acceleration = 15
 	elseif self.jetpacking and (self.jetpackFuel > 0) then
-		return Marine.kJetpackBaseAcceleration + Marine.kJetPackUpgradeAcceleration * self.jetpackAccelerationBonus
+		acceleration = Marine.kJetpackBaseAcceleration + Marine.kJetPackUpgradeAcceleration * self.jetpackAccelerationBonus
 	elseif self.sprinting then
-		return Player.kRunAcceleration
+		acceleration = Player.kRunAcceleration
+	else
+		acceleration = Player.kAcceleration
 	end
-
-    return Player.kAcceleration
+	
+    return acceleration * self:GetInventorySpeedScalar()
     
 end
 
 function Marine:GetJetPackState(input)
 	if self.jetpacking and (self.jetpackFuel > 0) then
 	
-		// Default jetpack movement maintains height, allows easier aiming (hover mode)	
+		// 3 = take off mode, 2 = flight mode (press no movement button to gain height faster)
 		if ((Shared.GetTime() - self.timeStartedJetpack) < Marine.kJetpackTakeOffTime) and (( Shared.GetTime() - self.lastTimeJetpackEnded > 1.5 ) or self:GetIsOnGround() )then
-		
 			return 3
-			
-		else
-		
-			return 2
-			
+		else		
+			return 2			
 		end
 	end
 	return 0
