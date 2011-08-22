@@ -24,6 +24,22 @@ function CommanderUI_GetTeamHarvesterCount()
 end
 
 /**
+ * Get total number of workers (mac or drifters.
+ */
+function CommanderUI_GetTeamWorkerCount()
+
+    local player = Client.GetLocalPlayer()
+    if player ~= nil then
+        local teamInfo = GetEntitiesForTeam("TeamInfo", player:GetTeamNumber())
+        if table.count(teamInfo) > 0 then
+            return teamInfo[1]:GetNumWorkers()
+        end
+    end
+    return 0
+    
+end
+
+/**
  * Indicates user clicked on the harvester count.
  */
 function CommanderUI_ClickedTeamHarvesterCount()

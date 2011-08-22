@@ -72,17 +72,35 @@ function Spores:PerformPrimaryAttack(player)
     // Create long-lasting spore cloud near player that can be used to prevent marines from passing through an area
     player:SetActivityEnd(player:AdjustFuryFireDelay(self:GetPrimaryAttackDelay()))
     
-    if Server then
+    local origin = player:GetModelOrigin()
     
-        local origin = player:GetModelOrigin()
-        local sporecloud = CreateSporeCloud(origin, player, Spores.kSporeDustCloudLifetime, Spores.kSporeDustCloudDPS, Spores.kSporeDustCloudRadius)
-        if not self:GetIsLoopingSoundPlaying() then
-            self:PlayLoopingSound(player, Spores.kLoopingDustSound)
-        end
+    // check for clouds in that area. if there are any clouds already very close with more than 50% of their life-time left don't trigger the attack
+    local clouds = GetEntitiesForTeamWithinRange("SporeCloud", self:GetTeamNumber(), origin, Spores.kSporeCloudRadius * .5)
+    local doAttack = true
+    
+    for index, cloud in pairs(clouds) do
+    
+    	if Shared.GetTime() < (cloud.createTime + cloud.lifetime/2) then
+    		doAttack = false
+    		break
+		end
+    
+    end
+    
+    if Server then
+        
+        if doAttack then
+        
+	        local sporecloud = CreateSporeCloud(origin, player, Spores.kSporeDustCloudLifetime, Spores.kSporeDustCloudDPS, Spores.kSporeDustCloudRadius)
+	        if not self:GetIsLoopingSoundPlaying() then
+	            self:PlayLoopingSound(player, Spores.kLoopingDustSound)
+	        end
+        
+       	end
         
     end
     
-    return true
+    return doAttack
     
 end
 

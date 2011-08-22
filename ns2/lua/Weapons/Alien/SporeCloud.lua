@@ -23,6 +23,8 @@ SporeCloud.networkVars =
 {
     radius = "float",
     altMode = "boolean",
+    lifetime = "float",
+    createtime = "float"
 }
 
 function GetEntityRecentlyHurt(entityId, time)

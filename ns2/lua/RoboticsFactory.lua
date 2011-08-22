@@ -90,6 +90,25 @@ function RoboticsFactory:ProcessOpenOrders()
     end
 end
 
+function RoboticsFactory:GetTechAllowed(techId, techNode, player)
+
+	if techId == kTechId.MAC then
+	
+		local cs = GetEntitiesForTeam("CommandStation", self:GetTeamNumber())
+		local numCs = table.count(cs)
+		
+		local macs = GetEntitiesForTeam("MAC", self:GetTeamNumber())
+		local numMacs = table.count(macs)
+		
+		if numMacs >= numCs * kMacsPerCommandStation then
+			return false
+		end
+	end
+	
+	return Structure.GetTechAllowed(self, techId, techNode, player)
+
+end
+
 function RoboticsFactory:OnResearchComplete(structure, researchId)
 
     local researchNode = self:GetTeam():GetTechTree():GetTechNode(researchId)

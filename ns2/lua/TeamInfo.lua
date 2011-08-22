@@ -20,7 +20,9 @@ TeamInfo.networkVars =
     teamNumber          = "integer (" .. ToString(kTeamInvalid) .. " to " .. ToString(kSpectatorIndex) .. ")",
     teamResources       = "float",
     personalResources   = "float",
-    numResourceTowers   = "integer (0 to 99)"
+    numResourceTowers   = "integer (0 to 99)",
+    numWorkers			= "integer (0 to 99)",
+    numMaxWorkers		= "integer (0 to 99)"
 }
 
 function TeamInfo:OnCreate()
@@ -35,6 +37,8 @@ function TeamInfo:OnCreate()
         self.teamResources = 0
         self.personalResources = 0
         self.numResourceTowers = 0
+        self.numWorkers = 0
+        self.numMaxWorkers = 0
         
     end
     
@@ -59,6 +63,10 @@ end
 
 function TeamInfo:GetPersonalResources()
     return self.personalResources
+end
+
+function TeamInfo:GetNumWorkers()
+	return tostring(self.numWorkers) .. " / " .. tostring(self.numMaxWorkers)
 end
 
 function TeamInfo:GetNumResourceTowers()
@@ -94,6 +102,9 @@ function TeamInfo:_UpdateInfo()
     
         self.teamNumber = self.team:GetTeamNumber()
         self.teamResources = self.team:GetTeamResources()
+        
+        self.numWorkers = self.team:GetNumWorkers()
+        self.numMaxWorkers = self.team:GetNumMaxWorkers()
         
         self.personalResources = 0
         for index, player in ipairs(self.team:GetPlayers()) do

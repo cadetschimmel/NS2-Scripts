@@ -107,6 +107,25 @@ function Hive:TriggerMetabolize(position)
     
 end
 
+function Hive:GetTechAllowed(techId, techNode, player)
+
+	if techId == kTechId.Drifter then
+	
+		local hives = GetEntitiesForTeam("Hive", self:GetTeamNumber())
+		local numHives = table.count(hives)
+		
+		local drifters = GetEntitiesForTeam("Drifter", self:GetTeamNumber())
+		local numDrifters = table.count(drifters)
+		
+		if numDrifters >= numHives * kDriftersPerHive then
+			return false
+		end
+	end
+	
+	return Structure.GetTechAllowed(self, techId, techNode, player)
+
+end
+
 function Hive:PerformActivation(techId, position, normal, commander)
 
     local success = false
@@ -115,7 +134,7 @@ function Hive:PerformActivation(techId, position, normal, commander)
     
         self:TriggerMetabolize(position)
         success = true
-
+		
     else        
         success = CommandStructure.PerformActivation(self, techId, position, normal, commander)
     end

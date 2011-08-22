@@ -2,10 +2,9 @@
 //
 // lua\Weapons\Alien\XenocideLeap.lua
 //
-//    Created by:   Charlie Cleveland (charlie@unknownworlds.com) and
-//                  Max McGuire (max@unknownworlds.com)
+//    Created by:   Andreas Urwalek (a_urwa@sbox.tugraz.at)
 // 
-// Bite is main attack, leap is secondary.
+// Xenocide is main attack, leap is secondary.
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Weapons/Alien/Ability.lua")

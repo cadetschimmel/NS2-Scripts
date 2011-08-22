@@ -35,9 +35,18 @@ GUIResourceDisplay.kResourceTowerIcon.Width = GUIResourceDisplay.kResourceTowerI
 GUIResourceDisplay.kResourceTowerIcon.Height = GUIResourceDisplay.kResourceTowerIcon.Coords.Y2 - GUIResourceDisplay.kResourceTowerIcon.Coords.Y1
 GUIResourceDisplay.kResourceTowerIcon.X = -GUIResourceDisplay.kResourceTowerIcon.Width / 2
 
+GUIResourceDisplay.kWorkerIcon = { Width = 0, Height = 0, X = 0, Y = 0, Coords = { X1 = 968, Y1 = 418, X2 = 995, Y2 = 444 } }
+GUIResourceDisplay.kWorkerIcon.Width = GUIResourceDisplay.kWorkerIcon.Coords.X2 - GUIResourceDisplay.kWorkerIcon.Coords.X1
+GUIResourceDisplay.kWorkerIcon.Height = GUIResourceDisplay.kWorkerIcon.Coords.Y2 - GUIResourceDisplay.kWorkerIcon.Coords.Y1
+GUIResourceDisplay.kWorkerIcon.X = GUIResourceDisplay.kWorkerIcon.Width * 1.5
+
+
 GUIResourceDisplay.kFontSize = 16
 GUIResourceDisplay.kIconTextXOffset = 5
 GUIResourceDisplay.kIconXOffset = 30
+
+GUIResourceDisplay.kWorkerTextureAlien = "ui/alien_commander_difter.dds"
+GUIResourceDisplay.kWorkerTextureMarine = "ui/marine_commander_mac.dds"
 
 function GUIResourceDisplay:Initialize(settingsTable)
 
@@ -115,6 +124,28 @@ function GUIResourceDisplay:Initialize(settingsTable)
     self.towerText:SetFontIsBold(true)
     self.towerIcon:AddChild(self.towerText)
     
+    // worker display
+    
+    self.workerIcon = GUIManager:CreateGraphicItem()
+    self.workerIcon:SetSize(Vector(GUIResourceDisplay.kWorkerIcon.Width, GUIResourceDisplay.kWorkerIcon.Height, 0))
+    self.workerIcon:SetAnchor(GUIItem.Right, GUIItem.Center)
+    local workerIconX = GUIResourceDisplay.kWorkerIcon.X + -GUIResourceDisplay.kWorkerIcon.Width - GUIResourceDisplay.kIconXOffset
+    local workerIconY = GUIResourceDisplay.kWorkerIcon.Y + -GUIResourceDisplay.kWorkerIcon.Height / 2
+    self.workerIcon:SetPosition(Vector(workerIconX, workerIconY, 0))
+    self.workerIcon:SetTexture(self.textureName)
+    GUISetTextureCoordinatesTable(self.workerIcon, GUIResourceDisplay.kWorkerIcon.Coords)
+    self.background:AddChild(self.workerIcon)
+    
+    self.workerText = GUIManager:CreateTextItem()
+    self.workerText:SetFontSize(GUIResourceDisplay.kFontSize)
+    self.workerText:SetAnchor(GUIItem.Right, GUIItem.Center)
+    self.workerText:SetTextAlignmentX(GUIItem.Align_Min)
+    self.workerText:SetTextAlignmentY(GUIItem.Align_Center)
+    self.workerText:SetPosition(Vector(GUIResourceDisplay.kIconTextXOffset, 0, 0))
+    self.workerText:SetColor(Color(1, 1, 1, 1))
+    self.workerText:SetFontIsBold(true)
+    self.workerIcon:AddChild(self.workerText)
+    
 end
 
 function GUIResourceDisplay:Uninitialize()
@@ -131,5 +162,7 @@ function GUIResourceDisplay:Update(deltaTime)
     self.teamText:SetText(ToString(PlayerUI_GetTeamResources()))
     
     self.towerText:SetText(ToString(CommanderUI_GetTeamHarvesterCount()))
+    
+    self.workerText:SetText(ToString(CommanderUI_GetTeamWorkerCount()))
     
 end

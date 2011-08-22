@@ -332,3 +332,13 @@ function MarineTeam:InitTechTree()
     self.techTree:SetComplete()
 
 end
+
+function MarineTeam:GetNumWorkers()
+	local macs = GetEntitiesForTeam("MAC", self:GetTeamNumber())
+	return table.count(macs)
+end
+
+function MarineTeam:GetNumMaxWorkers()
+	local cs = GetEntitiesForTeam("CommandStation", self:GetTeamNumber())
+	return table.count(cs) * kMacsPerCommandStation
+end

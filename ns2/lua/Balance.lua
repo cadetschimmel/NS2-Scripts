@@ -253,7 +253,7 @@ kShotgunMinDamageRange = 14
 kShotgunMaxDamageRange = 4.5
 kShotgunSpreadDegrees = 10 // original 20, decreased because i want to stack it up 4 times
 
-kFlechetteDamageScalar = 1.35 // 35% more damage
+kFlechetteDamageScalar = .35 // 35% more damage
 kFlechettesPerShot = 15
 kFlechetteDamage = 2 // per flechette
 kFlechetteSpreadRange = 20
@@ -366,7 +366,7 @@ kSporesDamageType = kDamageType.Gas
 kSporesDustDamagePerSecond = 18
 kSporesDustFireDelay = 0.18
 kSporesCloudFireDelay = 0.8
-kSporesDustEnergyCost = 7
+kSporesDustEnergyCost = 6
 kSporesCloudEnergyCost = 20
 
 kUmbraEnergyCost = 35
@@ -407,6 +407,8 @@ kDrifterAttackDamage = 5
 kDrifterAttackDamageType = kDamageType.Normal
 kDrifterAttackFireDelay = 0.6
 
+kDriftersPerHive = 4
+kMacsPerCommandStation = 4
 
 kMelee1DamageScalar = 1.1
 kMelee2DamageScalar = 1.2
@@ -603,7 +605,7 @@ kObservatoryInitialEnergy = 25  kObservatoryMaxEnergy = 100
 kObservatoryScanCost = 20  
 kObservatoryDistressBeaconCost = 50  
 
-kDrifterCost = 15  
+kDrifterCost = 20  
 
 kMiniCragInitialEnergy = 5	kMiniCragMaxEnergy = 25
 kCragInitialEnergy = 25  kCragMaxEnergy = 100

@@ -777,3 +777,13 @@ function AlienTeam:UpdateTeamSpecificGameEffects(teamEntities, enemyPlayers)
     self:UpdateShadeEffects(teamEntities, enemyPlayers)
 
 end
+
+function AlienTeam:GetNumWorkers()
+	local drifters = GetEntitiesForTeam("Drifter", self:GetTeamNumber())
+	return table.count(drifters)
+end
+
+function AlienTeam:GetNumMaxWorkers()
+	local hives = GetEntitiesForTeam("Hive", self:GetTeamNumber())
+	return table.count(hives) * kDriftersPerHive
+end

@@ -977,4 +977,12 @@ function PlayingTeam:UpdateVoteToEject()
     
 end
 
+function PlayingTeam:GetNumWorkers()
+	return 0
+end
+
+function PlayingTeam:GetNumMaxWorkers()
+	return 0
+end
+
 

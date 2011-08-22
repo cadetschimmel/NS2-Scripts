@@ -3,6 +3,7 @@
 // lua\Skulk.lua
 //
 //    Created by:   Charlie Cleveland (charlie@unknownworlds.com)
+//					Andreas Urwalek (a_urwa@sbox.tugraz.at)
 //
 // ========= For more information, visit us at http://www.unknownworlds.com =====================
 Script.Load("lua/Utility.lua")
